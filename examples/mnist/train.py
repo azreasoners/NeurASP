@@ -5,11 +5,11 @@ import time
 import torch
 
 from dataGen import dataList, obsList, test_loader
-from dlpmln import NeurASP
+from neurasp import NeurASP
 from network import Net
 
 ######################################
-# The dlpmln program can be written in the scope of ''' Rules '''
+# The NeurASP program can be written in the scope of ''' Rules '''
 # It can also be written in a file
 ######################################
 
@@ -27,7 +27,7 @@ m = Net()
 nnMapping = {'digit':m}
 optimizers = {'digit':torch.optim.Adam(m.parameters(), lr=0.001)}
 
-dlpmlnObj = NeurASP(dprogram, nnMapping, optimizers)
+NeurASPobj = NeurASP(dprogram, nnMapping, optimizers)
 
 ########
 # Start training and testing
@@ -37,9 +37,9 @@ startTime = time.time()
 for i in range(1):
     print('Epoch {}...'.format(i+1))
     time1 = time.time()
-    dlpmlnObj.learn(dataList=dataList, obsList=obsList, epoch=1, alpha=0, smPickle='data/stableModels.pickle', batchSize=10)
+    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=1, alpha=0, smPickle='data/stableModels.pickle')
     time2 = time.time()
-    acc, _ = dlpmlnObj.testNN('digit', test_loader)
+    acc, _ = NeurASPobj.testNN('digit', test_loader)
     print('Test Acc: {:0.2f}%'.format(acc))
     print('--- train time: %s seconds ---' % (time2 - time1))
     print('--- test time: %s seconds ---' % (time.time() - time2))

@@ -1,15 +1,15 @@
 import sys
-sys.path.append("../../")
+sys.path.append('../../')
 import time
 
 import torch
 
-from dataGen70k import dataList, obsList, train_loader, test_loader
-from dlpmln import DeepLPMLN
+from dataGen import dataList, obsList, train_loader, test_loader
+from neurasp import NeurASP
 from network import Sudoku_Net
 
 ######################################
-# The dlpmln program can be written in the scope of ''' Rules '''
+# The NeurASP program can be written in the scope of ''' Rules '''
 # It can also be written in a file
 ######################################
 
@@ -38,7 +38,7 @@ m = Sudoku_Net()
 nnMapping = {'predict': m}
 optimizers = {'predict': torch.optim.Adam(m.parameters(), lr=0.0001)}
 
-dlpmlnObj = DeepLPMLN(dprogram, nnMapping, optimizers, gpu=False)
+NeurASPobj = NeurASP(dprogram, nnMapping, optimizers, gpu=False)
 
 ########
 # Start training and testing
@@ -49,17 +49,17 @@ dlpmlnObj = DeepLPMLN(dprogram, nnMapping, optimizers, gpu=False)
 
 # train a model from scratch using NN only
 startTime = time.time()
-print('Initial test accuracy (whole board): {:0.2f}%\nInitial test accuracy (single cell): {:0.2f}%'.format(*dlpmlnObj.testNN('predict', test_loader)))
+print('Initial test accuracy (whole board): {:0.2f}%\nInitial test accuracy (single cell): {:0.2f}%'.format(*NeurASPobj.testNN('predict', test_loader)))
 
 for i in range(100):
     print('Training for Epoch {}...'.format(i+1))
     time1 = time.time()
-    dlpmlnObj.learn(dataList=dataList, obsList=obsList, alpha=0, epoch=1, method='exact', smPickle='data/stableModels.pickle', batchSize=1)
+    NeurASPobj.learn(dataList=dataList, obsList=obsList, alpha=0, epoch=1, method='exact', smPickle='data/stableModels.pickle', batchSize=1)
     time2 = time.time()
-    acc, singleAcc = dlpmlnObj.testNN('predict', train_loader)
+    acc, singleAcc = NeurASPobj.testNN('predict', train_loader)
     print('Train Acc (whole board): {:0.2f}%'.format(acc))
     print('Train Acc (single cell): {:0.2f}%'.format(singleAcc))
-    acc, singleAcc = dlpmlnObj.testNN('predict', test_loader)
+    acc, singleAcc = NeurASPobj.testNN('predict', test_loader)
     print('Test Acc (whole board): {:0.2f}%'.format(acc))
     print('Test Acc (single cell): {:0.2f}%'.format(singleAcc))
     print("--- train time: %s seconds ---" % (time2 - time1))

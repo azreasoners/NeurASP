@@ -1,12 +1,11 @@
+import pickle
+
 import numpy as np
+from sklearn.model_selection import ShuffleSplit
 import torch
 from torch.utils.data import Dataset, DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 from torchvision.transforms import transforms
-from sklearn.model_selection import ShuffleSplit
-import pickle
-
-import sys
 
 def save_pickle(obj,filename):
     with open(filename+'.p', 'wb') as fp:
