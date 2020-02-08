@@ -7,13 +7,13 @@ NeurASP is a simple extension of answer set programs by embracing neural network
 2. how NeurASP is used to train a neural network better by training with rules so that a neural network not only learns from implicit correlations from the data but also from the explicit complex semantic constraints expressed by ASP rules.
 
 ## Prerequisite
-1. Install either Anaconda or Miniconda according to the [link](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
+1. Install either Anaconda or Miniconda according to their [installation page](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
 2. Install [`clingo`](https://potassco.org/clingo/) via
 ```
 conda install -c potassco clingo
 ```
-3. Install PyTorch according to the [link](https://pytorch.org/).
+3. Install PyTorch according to the its [home page](https://pytorch.org/).
 
 ## Installation
 Clone this repo:
