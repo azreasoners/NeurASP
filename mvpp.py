@@ -1,11 +1,12 @@
+import itertools
+import math
 import os.path
 import re
-import numpy as np
-import clingo
-import math
-import itertools
-import time
 import sys
+import time
+
+import clingo
+import numpy as np
 
 class MVPP(object):
     def __init__(self, program, k=1, eps=0.0001):

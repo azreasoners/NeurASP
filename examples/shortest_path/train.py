@@ -4,9 +4,9 @@ import time
 
 import torch
 
-from neurasp import NeurASP
-from network import FC
 from dataGen import obsList, obsListTest, dataList, dataListTest
+from network import FC
+from neurasp import NeurASP
 
 #############################
 # DeepLPMLN program
@@ -94,7 +94,7 @@ NeurASPobj = NeurASP(nnRule+aspRule+path_con+reach_con+opt_con, nnMapping, optim
 
 
 ########
-# Start training and testing on a list of different MVPP programs
+# Start training and testing
 ########
 mvppList = [remove_con, path_con, reach_con, remove_con+path_con, remove_con+reach_con, path_con+reach_con, remove_con+path_con+reach_con, remove_con+path_con+reach_con+opt_con]
 mvppList = [aspRule+i for i in mvppList]

@@ -5,8 +5,8 @@ import time
 import torch
 
 from dataGen import dataList, obsList, test_loader
-from neurasp import NeurASP
 from network import Net
+from neurasp import NeurASP
 
 ######################################
 # The NeurASP program can be written in the scope of ''' Rules '''
