@@ -9,11 +9,11 @@ NeurASP is a simple extension of answer set programs by embracing neural network
 ## Prerequisite
 1. Install Python 3.7 version of Anaconda according to its [installation page](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html).
 
-2. Install [`clingo`](https://potassco.org/clingo/) via
+2. Install [`clingo`](https://potassco.org/clingo/) using the following command line. (clingo 5.3 and 5.4 are tested)
 ```
 conda install -c potassco clingo
 ```
-3. Install PyTorch according to the its [home page](https://pytorch.org/).
+3. Install PyTorch according to the its [home page](https://pytorch.org/). (PyTorch version 1.0.1, 1.3.0, and 1.4.0 are tested)
 
 ## Installation
 Clone this repo:
