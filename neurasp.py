@@ -26,6 +26,7 @@ class NeurASP(object):
         self.const = {} # the mapping from c to v for rule #const c=v.
         self.n = {} # the mapping from nn name to an integer n denoting the domain size; n would be 1 or N (>=3); note that n=2 in theorey is implemented as n=1
         self.e = {} # the mapping from nn name to an integer e
+        self.domain = {} # the mapping from nn name to the domain of the predicate in that nn atom
         self.normalProbs = None # record the probabilities from normal prob rules
         self.nnOutputs = {}
         self.nnGradients = {}
@@ -34,14 +35,16 @@ class NeurASP(object):
         else:
             self.nnMapping = nnMapping
         self.optimizers = optimizers
-        # self.mvpp is a dictionary consisting of 3 mappings: 
+        # self.mvpp is a dictionary consisting of 4 keys: 
         # 1. 'program': a string denoting an MVPP program where the probabilistic rules generated from NN are followed by other rules;
         # 2. 'nnProb': a list of lists of tuples, each tuple is of the form (model, term, i, j)
         # 3. 'atom': a list of list of atoms, where each list of atoms is corresponding to a prob. rule
         # 4. 'nnPrRuleNum': an integer denoting the number of probabilistic rules generated from NN
         self.mvpp = {'nnProb': [], 'atom': [], 'nnPrRuleNum': 0, 'program': ''}
+        self.yoloInfo = [] # a list of necessary info for yolo neural network to make prediction, each element is of the form [m, t, domain]
         self.mvpp['program'], self.mvpp['program_pr'], self.mvpp['program_asp'] = self.parse(obs='')
         self.stableModels = [] # a list of stable models, where each stable model is a list
+
 
 
     def constReplacement(self, t):
@@ -60,20 +63,22 @@ class NeurASP(object):
         """
 
         # STEP 1: obtain all information
-        # regex = '^nn\((.+\)),(.+),(\(.+\))[)]$'
-        # nn(digit(1,X), (0,1,2,3,4,5,6,7,8,9))
         regex = '^nn\((.+)\((.+)\),\((.+)\)\)$'
         out = re.search(regex, nnAtom)
         m = out.group(1)
-        e, t = out.group(2).split(',')
+        e, t = out.group(2).split(',', 1) # in case t is of the form t1,...,tk, we only split on the first comma
         domain = out.group(3).split(',')
         t = self.constReplacement(t)
-        e = int(self.constReplacement(e))
+        # check the value of e
+        e = e.strip()
+        if e != 'yolo':
+            e = int(self.constReplacement(e))
         n = len(domain)
         if n == 2:
             n = 1
         self.n[m] = n
         self.e[m] = e
+        self.domain[m] = domain
         if m not in self.nnOutputs:
             self.nnOutputs[m] = {}
             self.nnGradients[m] = {}
@@ -83,33 +88,38 @@ class NeurASP(object):
 
         # STEP 2: generate MVPP rules
         mvppRules = []
-        # we have different translations when n = 2 (i.e., n = 1 in implementation) or when n > 2
-        if n == 1:
-            for i in range(e):
-                rule = '@0.0 {}({}, {}, {}); @0.0 {}({}, {}, {}).'.format(m, t, i, domain[0], m, t, i, domain[1])
-                prob = [tuple((m, t, i, 0))]
-                atoms = ['{}({}, {}, {})'.format(m, t, i, domain[0]), '{}({}, {}, {})'.format(m, t, i, domain[1])]
-                mvppRules.append(rule)
-                self.mvpp['nnProb'].append(prob)
-                self.mvpp['atom'].append(atoms)
-                self.mvpp['nnPrRuleNum'] += 1
-
-        elif n > 2:
-            for i in range(e):
-                rule = ''
-                prob = []
-                atoms = []
-                for j in range(n):
-                    atom = '{}({}, {}, {})'.format(m, t, i, domain[j])
-                    rule += '@0.0 {}({}, {}, {}); '.format(m, t, i, domain[j])
-                    prob.append(tuple((m, t, i, j)))
-                    atoms.append(atom)
-                mvppRules.append(rule[:-2]+'.')
-                self.mvpp['nnProb'].append(prob)
-                self.mvpp['atom'].append(atoms)
-                self.mvpp['nnPrRuleNum'] += 1
+        # if the neural network is yolo network
+        if e == 'yolo':
+            self.yoloInfo.append((m, t, domain))
+        # if the neural network is a classification network that outputs probabilities only
         else:
-            print('Error: the number of element in the domain %s is less than 2' % domain)
+            # we have different translations when n = 2 (i.e., n = 1 in implementation) or when n > 2
+            if n == 1:
+                for i in range(e):
+                    rule = '@0.0 {}({}, {}, {}); @0.0 {}({}, {}, {}).'.format(m, t, i, domain[0], m, t, i, domain[1])
+                    prob = [tuple((m, t, i, 0))]
+                    atoms = ['{}({}, {}, {})'.format(m, t, i, domain[0]), '{}({}, {}, {})'.format(m, t, i, domain[1])]
+                    mvppRules.append(rule)
+                    self.mvpp['nnProb'].append(prob)
+                    self.mvpp['atom'].append(atoms)
+                    self.mvpp['nnPrRuleNum'] += 1
+
+            elif n > 2:
+                for i in range(e):
+                    rule = ''
+                    prob = []
+                    atoms = []
+                    for j in range(n):
+                        atom = '{}({}, {}, {})'.format(m, t, i, domain[j])
+                        rule += '@0.0 {}({}, {}, {}); '.format(m, t, i, domain[j])
+                        prob.append(tuple((m, t, i, j)))
+                        atoms.append(atom)
+                    mvppRules.append(rule[:-2]+'.')
+                    self.mvpp['nnProb'].append(prob)
+                    self.mvpp['atom'].append(atoms)
+                    self.mvpp['nnPrRuleNum'] += 1
+            else:
+                print('Error: the number of element in the domain %s is less than 2' % domain)
         return mvppRules
 
 
@@ -138,7 +148,7 @@ class NeurASP(object):
         symbols = [atom.symbol for atom in clingo_control.symbolic_atoms]
         mvppRules = [self.nnAtom2MVPPrules(str(atom)) for atom in symbols if atom.name == 'nn']
         mvppRules = [rule for rules in mvppRules for rule in rules]
-        # 3. Combine neural rules with the other rules
+        # 3. obtain the ASP part in the original NeurASP program
         lines = [line.strip() for line in dprogram.split('\n') if line and not line.startswith('nn(')]
         return '\n'.join(mvppRules + lines), '\n'.join(mvppRules), '\n'.join(lines)
 
@@ -157,23 +167,24 @@ class NeurASP(object):
         clingo_control.add('base', [], asp_with_facts)
         clingo_control.ground([('base', [])])
         result = clingo_control.solve()
-        # print(asp_with_facts)
-        # print(result)
-        # sys.exit()
         if str(result) == 'SAT':
             return True
         return False
 
         
-    def infer(self, dataDic, obs='', mvpp=''):
+    def infer(self, dataDic, obs='', mvpp='', postProcessing=None):
         """
         @param dataDic: a dictionary that maps terms to tensors/np-arrays
         @param obs: a string which is a set of constraints denoting an observation
         @param mvpp: an MVPP program used in inference
         """
 
+        mvppRules = ''
+        facts = ''
+
         # Step 1: get the output of each neural network
         for m in self.nnOutputs:
+            self.nnMapping[m].eval()
             for t in self.nnOutputs[m]:
                 # if dataDic maps t to tuple (dataTensor, {'m': labelTensor})
                 if isinstance(dataDic[t], tuple):
@@ -181,11 +192,23 @@ class NeurASP(object):
                 # if dataDic maps t to dataTensor directly
                 else:
                     dataTensor = dataDic[t]
-                self.nnOutputs[m][t] = self.nnMapping[m](dataTensor).view(-1).tolist()
-        # print(self.nnOutputs)
+                if self.e[m] == 'yolo':
+                    if postProcessing:
+                        self.nnOutputs[m][t] = postProcessing(self.nnMapping[m](dataTensor))
+                        # Step 2: turn yolo outputs into a set of MVPP probabilistic rules
+                        for idx, (label, x1, y1, x2, y2, conf) in enumerate(self.nnOutputs[m][t]):
+                            # we only include the box if its label is within domain
+                            if label in self.domain[m]:
+                                facts += 'box({}, b{}, {}, {}, {}, {}).\n'.format(t, idx, x1, y1, x2, y2)
+                                atom = '{}({}, b{}, {})'.format(m, t, idx, label)
+                                mvppRules += '@{} {}; @{} -{}.\n'.format(conf, atom, 1-conf, atom)
+                    else:
+                        print('Error: the function for postProcessing yolo output is not specified.')
+                        sys.exit()
+                else:
+                    self.nnOutputs[m][t] = self.nnMapping[m](dataTensor).view(-1).tolist()
 
-        # Step 2: turn the NN outputs into a set of MVPP probabilistic rules
-        mvppRules = ''
+        # Step 3: turn the NN outputs (from usual classification neurual networks) into a set of MVPP probabilistic rules
         for ruleIdx in range(self.mvpp['nnPrRuleNum']):
             probs = [self.nnOutputs[m][t][i*self.n[m]+j] for (m,t,i,j) in self.mvpp['nnProb'][ruleIdx]]
             if len(probs) == 1:
@@ -197,9 +220,7 @@ class NeurASP(object):
                 mvppRules += tmp[:-2] + '.\n'
 
         # Step 3: find an optimal SM under obs
-        dmvpp = MVPP(mvppRules + mvpp)
-        # print(dmvpp.pi_prime)
-        # breakpoint()
+        dmvpp = MVPP(facts + mvppRules + mvpp)
         return dmvpp.find_one_most_probable_SM_under_obs_noWC(obs=obs)
 
 
@@ -243,13 +264,8 @@ class NeurASP(object):
 
         # we train for 'epoch' times of epochs
         for epochIdx in range(epoch):
-            # old_time = time.time()
             # for each training instance in the training data
             for dataIdx, data in enumerate(dataList):
-                # if dataIdx % 1000 == 999:
-                #     print("--- time for 1000 data: %s seconds ---" % (time.time() - old_time))
-                #     old_time = time.time()
-
                 # data is a dictionary. we need to edit its key if the key contains a defined const c
                 # where c is defined in rule #const c=v.
                 for key in data:
@@ -318,7 +334,6 @@ class NeurASP(object):
                     else:
                         if method == 'exact':
                             gradients = dmvpp.gradients_one_obs(obsList[dataIdx], opt=opt)
-                            # breakpoint()
                         elif method == 'sampling':
                             models = dmvpp.sample_obs(obsList[dataIdx], num=10)
                             gradients = dmvpp.mvppLearn(models)
@@ -393,35 +408,21 @@ class NeurASP(object):
         with torch.no_grad():
             for data, target in testLoader:
                 output = self.nnMapping[nn](data.to(self.device))
-                # print(output.shape)
-                # sys.exit()
                 if self.n[nn] > 2 :
                     pred = output.argmax(dim=-1, keepdim=True) # get the index of the max log-probability
-                    # print(pred)
                     target = target.to(self.device).view_as(pred)
-                    # print(target)
-                    # breakpoint()
-                    
                     correctionMatrix = (target.int() == pred.int()).view(target.shape[0], -1)
                     correct += correctionMatrix.all(1).sum().item()
                     total += target.shape[0]
-                    # breakpoint()
                     singleCorrect += correctionMatrix.sum().item()
-                    # singleTotal += target.shape[0] * target.view(target.shape[0], -1).shape[1]
                     singleTotal += target.numel()
-                    # breakpoint()
-
-                    # correct += pred.eq(target.to(self.device).view_as(pred)).sum().item()
-                    # total += len(pred.tolist())
                 else: 
                     pred = np.array([int(i[0]<0.5) for i in output.tolist()])
                     target = target.numpy()
-                    # correct += (pred == target).sum()
                     correct += (pred.reshape(target.shape) == target).sum()
                     total += len(pred)
         accuracy = 100. * correct / total
         singleAccuracy = 100. * singleCorrect / singleTotal
-        # print("Test Accuracy on NN Only for {}: {:.0f}%".format(nn, accuracy) )
         return accuracy, singleAccuracy
     
     # We interprete the most probable stable model(s) as the prediction of the inference mode
@@ -436,24 +437,10 @@ class NeurASP(object):
         correct = 0
         for dataIdx, data in enumerate(dataList):
             models = self.infer(data, obs=':- mistake.', mvpp=self.mvpp['program_asp'])
-            # print('\n\n==========\nindex: {}\nobs: {}\n'.format(dataIdx, obsList[dataIdx]))
-            # breakpoint()
-            # print(len(models))
-            check = False
             for model in models:
                 if self.satisfy(model, obsList[dataIdx]):
                     correct += 1
-                    check = True
                     break
-            # if check == False:
-            #     import matplotlib.pyplot as plt
-            #     plt.imshow(data['img'][0][0].numpy())
-            #     plt.show()
-            #     breakpoint()
-                # else:
-                #     print(dataIdx)
-                #     print(obsList[dataIdx])
-                #     print('\n\n\n\n')
         accuracy = 100. * correct / len(dataList)
         return accuracy
 
