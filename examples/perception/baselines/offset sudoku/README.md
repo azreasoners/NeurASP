@@ -5,7 +5,6 @@ Randomly place number
 If the board has one solution:
     add the board to the dataset 
 else:
-    check if any constraints were violated. 
     If constraint violated:
         remove the last number added.
 
