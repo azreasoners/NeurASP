@@ -6,7 +6,7 @@ In the Sudoku Solving problem, we use a neural network to learn to solve Sudoku 
 * train.py: a Python file that defines the NeurASP program and calls learn method in neurasp package.
 * test.py: a Python file that defines the NeurASP program and calls testNN method in neurasp package.
 * dataGen.py: a Python file that load the train/test data and generate dataList, obsList (for training), and test_loader (for testing)
-* network.py: a Python file that defines the network "predict".
+* network.py: a Python file that defines the network "sol".
 * solving_sudoku.ipynb: a Jupyter notebook for this example with detailed explanations to the codes
 
 ## Train

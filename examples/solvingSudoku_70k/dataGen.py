@@ -85,12 +85,12 @@ obsList = []
 
 for X, y in train_loader:
     y = y.view(-1).long()
-    tmp = (X, {'predict': y})
+    tmp = (X, {'sol': y})
     dataList.append({'config': tmp})
     obs = ''
     for pos, value in enumerate(X.view(-1).tolist()):
         if value != 0:
-            obs += ':- not predict({}, config, {}).\n'.format(pos, int(value))
+            obs += ':- not sol({}, config, {}).\n'.format(pos, int(value))
     obsList.append(obs)
 
 train_loader = DataLoader(dataset, batch_size=230, sampler=train_sampler)

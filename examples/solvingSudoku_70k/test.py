@@ -17,10 +17,10 @@ startTime = time.time()
 
 dprogram = '''
 % neural rule
-nn(predict(81, config), [1,2,3,4,5,6,7,8,9]).
+nn(sol(81, config), [1,2,3,4,5,6,7,8,9]).
 
 % we assign one number at each position (R,C)
-a(R,C,N) :- predict(Pos, config, N), R=Pos/9, C=Pos\9.
+a(R,C,N) :- sol(Pos, config, N), R=Pos/9, C=Pos\9.
 
 % it's a mistake if the same number shows 2 times in a row
 :- a(R,C1,N), a(R,C2,N), C1!=C2.
@@ -37,7 +37,7 @@ a(R,C,N) :- predict(Pos, config, N), R=Pos/9, C=Pos\9.
 ########
 
 m = Sudoku_Net()
-nnMapping = {'predict': m}
+nnMapping = {'sol': m}
 NeurASPobj = NeurASP(dprogram, nnMapping, optimizers=None)
 
 ########

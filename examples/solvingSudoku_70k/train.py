@@ -17,10 +17,10 @@ startTime = time.time()
 
 dprogram = '''
 % neural rule
-nn(predict(81, config), [1,2,3,4,5,6,7,8,9]).
+nn(sol(81, config), [1,2,3,4,5,6,7,8,9]).
 
 % we assign one number at each position (R,C)
-a(R,C,N) :- predict(Pos, config, N), R=Pos/9, C=Pos\9.
+a(R,C,N) :- sol(Pos, config, N), R=Pos/9, C=Pos\9.
 
 % it's a mistake if the same number shows 2 times in a row
 :- a(R,C1,N), a(R,C2,N), C1!=C2.
@@ -37,25 +37,25 @@ a(R,C,N) :- predict(Pos, config, N), R=Pos/9, C=Pos\9.
 ########
 
 m = Sudoku_Net()
-nnMapping = {'predict': m}
-optimizers = {'predict': torch.optim.Adam(m.parameters(), lr=0.0001)}
+nnMapping = {'sol': m}
+optimizers = {'sol': torch.optim.Adam(m.parameters(), lr=0.0001)}
 NeurASPobj = NeurASP(dprogram, nnMapping, optimizers, gpu=False)
 
 ########
 # Start training and testing
 ########
 
-print('Initial test accuracy (whole board): {:0.2f}%\nInitial test accuracy (single cell): {:0.2f}%'.format(*NeurASPobj.testNN('predict', test_loader)))
+print('Initial test accuracy (whole board): {:0.2f}%\nInitial test accuracy (single cell): {:0.2f}%'.format(*NeurASPobj.testNN('sol', test_loader)))
 
 for i in range(100):
     print('Training for Epoch {}...'.format(i+1))
     time1 = time.time()
     NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=1, smPickle='data/stableModels.pickle')
     time2 = time.time()
-    acc, singleAcc = NeurASPobj.testNN('predict', train_loader)
+    acc, singleAcc = NeurASPobj.testNN('sol', train_loader)
     print('Train Acc (whole board): {:0.2f}%'.format(acc))
     print('Train Acc (single cell): {:0.2f}%'.format(singleAcc))
-    acc, singleAcc = NeurASPobj.testNN('predict', test_loader)
+    acc, singleAcc = NeurASPobj.testNN('sol', test_loader)
     print('Test Acc (whole board): {:0.2f}%'.format(acc))
     print('Test Acc (single cell): {:0.2f}%'.format(singleAcc))
     print("--- train time: %s seconds ---" % (time2 - time1))
