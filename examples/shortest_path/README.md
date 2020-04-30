@@ -3,9 +3,23 @@ Consider a 4*4 grid. There are 16 nodes and 24 edges in the grid. Given any 2 no
 
 We apply NeurASP on this problem using the same dataset and the neural network model from (Xu et al. 2018), but with a different training target: to maximize the probability of the training data under the semantics of NeurASP.
 
-## Train and Test
-To start training, execute the following command under this folder
+## File Description
+* data: a folder containing the training and testing data. The data is stored in the file shortestPath.data, which is from (Xu et al. 2018). Each row in shortestPath.data is a 3-tuple: the first element contains a sequence of 8 edge indices that are removed, the second element contains a sequence of 2 node indices that are start/end nodes, and the third element is the label containing a sequence of edge indices that should be in the shortest path.
+* train.py: a Python file that defines the NeurASP program and calls learn method in neurasp package.
+* test.py: a Python file that defines the NeurASP program and calls testConstraint method in neurasp package.
+* dataGen.py: a Python file that load the train/test data and generate dataList, obsList (for training), and dataListTest, obsListTest (for testing)
+* network.py: a Python file that defines the network "sp".
+* shortest_path.ipynb: a Jupyter notebook for this example with detailed explanations to the codes
+
+## Train
+To start training, execute the following command under this folder.
 ```
 python train.py
 ```
-the test accuracy will also be print out. 
+The trained model will be saved in file "data/model.pt" and the test accuracy will also be printed out. 
+
+## Test
+If you already generated the trained model "data/model.pt", you can directly check the accuracy on the testing data by executing the following command under this folder.
+```
+python test.py
+```

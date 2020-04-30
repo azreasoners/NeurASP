@@ -1,9 +1,7 @@
-import torch
-import torchvision
-from torchvision import datasets, transforms
-from torch.autograd import Variable
 import numpy as np
 from numpy.random import permutation
+import torch
+from torch.autograd import Variable
 
 # Define the class for the dataset
 class GridData():
@@ -24,7 +22,6 @@ class GridData():
                 data.append(np.concatenate((self.to_one_hot(removed, 24, inv=True), self.to_one_hot(inp, 16))))
                 path = [int(x) for x in paths[0].split('-')]
                 labels.append(self.to_one_hot(path, 24))
-
 
         # We're going to split 60/20/20 train/test/validation
         perm = permutation(len(data))
@@ -76,18 +73,18 @@ def generateDataset(inPath, outPath):
 # construct the dataset (a dictionary)
 dataset = generateDataset('data/shortestPath.data', 'data/shorteatPath_')
 
+# for training
 obsList = []
 with open('data/shorteatPath_train.txt', 'r') as f:
     obsList = f.read().strip().strip('#evidence').split('#evidence')
-
-obsListTest = []
-with open('data/shorteatPath_test.txt', 'r') as f:
-    obsListTest = f.read().strip().strip('#evidence').split('#evidence')
-
 dataList = []
 for data in dataset['train']:
     dataList.append({'g': Variable(torch.from_numpy(data).float(), requires_grad=False)})
 
+# for testing
+obsListTest = []
+with open('data/shorteatPath_test.txt', 'r') as f:
+    obsListTest = f.read().strip().strip('#evidence').split('#evidence')
 dataListTest = []
 for data in dataset['test']:
     dataListTest.append({'g': Variable(torch.from_numpy(data).float(), requires_grad=False)})

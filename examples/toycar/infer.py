@@ -3,7 +3,7 @@ sys.path.append('../../')
 
 import torch
 
-from dataGen import factsList, dataList
+from dataGen import termPath2dataList
 from network import Net
 from neurasp import NeurASP
 
@@ -13,22 +13,21 @@ from neurasp import NeurASP
 ######################################
 
 dprogram = r'''
-nn(label(1,I,B), ["person", "car", "truck", "other"]) :- box(I,B,X1,Y1,X2,Y2).
+nn(label(1,I,B), ["car", "cat", "person", "truck", "other"]) :- box(I,B,X1,Y1,X2,Y2).
 '''
 
 aspProgram = r'''
 % define smaller/2 between labels
-smaller("cup", "cat").
 smaller("cat", "person").
 smaller("person", "car").
 smaller("person", "truck").
 smaller(X,Y) :- smaller(X,Z), smaller(Z,Y).
 
 % define smaller/3 between objects in bounding boxes
-smaller(I,B1,B2) :- not -smaller(I,B1,B2), label(I,B1,0,L1), label(I,B2,0,L2), smaller(L1,L2).
+smaller(I,B1,B2) :- not -smaller(I,B1,B2), label(0,I,B1,L1), label(0,I,B2,L2), smaller(L1,L2).
 -smaller(I,B2,B1) :- box(I,B1,X1,Y1,X2,Y2), box(I,B2,X1',Y1',X2',Y2'), Y2>=Y2', |X1-X2|*|Y1-Y2| < |X1'-X2'|*|Y1'-Y2'|.
 smaller(I,B1,B2) :- -smaller(I,B2,B1).
-toy(I,B1) :- label(I,B1,0,L1), label(I,B2,0,L2), smaller(I,B1,B2), smaller(L2,L1).
+toy(I,B1) :- label(0,I,B1,L1), label(0,I,B2,L2), smaller(I,B1,B2), smaller(L2,L1).
 '''
 
 ########
@@ -37,6 +36,19 @@ toy(I,B1) :- label(I,B1,0,L1), label(I,B2,0,L2), smaller(I,B1,B2), smaller(L2,L1
 
 m = Net()
 nnMapping = {'label': m}
+
+########
+# Construct a list of facts and a list of dataDic, where each dataDic maps terms to tensors
+########
+
+# set the term and the path to the image files represetned by this term
+termPath = 'img ./data/'
+# set the size of the reshaped image
+img_size = 416
+# set the set of classes that we consider
+domain = ["car", "cat", "person", "truck", "other"]
+
+factsList, dataList = termPath2dataList(termPath, img_size, domain)
 
 ########
 # Start inference for each image

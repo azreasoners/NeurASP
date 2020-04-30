@@ -1,14 +1,11 @@
 import sys
 sys.path.append('../../')
-import time
 
 import torch
 
-from dataGen import dataList, obsList, dataListTest, obsListTest
+from dataGen import dataListTest, obsListTest
 from network import FC
 from neurasp import NeurASP
-
-startTime = time.time()
 
 ######################################
 # The NeurASP program can be written in the scope of ''' Rules '''
@@ -57,29 +54,21 @@ reachable(X, Y) :- reachable(X, Z), mrp(Z, Y).
 '''
 
 ########
-# Define nnMapping and optimizers, initialze NeurASP object
+# Define nnMapping and initialze NeurASP object
 ########
 
 m = FC(40, *[50, 50, 50, 50, 50], 24)
 nnMapping = {'mrp': m}
-optimizer = {'mrp': torch.optim.Adam(m.parameters(), lr=0.001)}
-NeurASPobj = NeurASP(dprogram+aspProgram, nnMapping, optimizer)
+NeurASPobj = NeurASP(dprogram+aspProgram, nnMapping, optimizers=None)
 
 ########
-# Start training and testing
+# Load pretrained model
 ########
 
 saveModelPath = 'data/model.pt'
+m.load_state_dict(torch.load(saveModelPath, map_location='cpu'))
 
-for i in range(20):
-    print('Continuously training for 10 epochs round {}...'.format(i+1))
-    time1 = time.time()
-    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle')
-    time2 = time.time()
-    NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=[aspProgram])
-    print("--- train time: %s seconds ---" % (time2 - time1))
-    print("--- test time: %s seconds ---" % (time.time() - time2))
-    print('--- total time from beginning: %s minutes ---' % int((time.time() - startTime)/60) )
-
-print('Storing the trained model into {}'.format(saveModelPath))
-torch.save(m.state_dict(), saveModelPath)
+########
+# Start testing
+########
+NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=[aspProgram])

@@ -37,11 +37,11 @@ class NeurASP(object):
         self.optimizers = optimizers
         # self.mvpp is a dictionary consisting of 4 keys: 
         # 1. 'program': a string denoting an MVPP program where the probabilistic rules generated from NN are followed by other rules;
-        # 2. 'nnProb': a list of lists of tuples, each tuple is of the form (model, term, i, j)
+        # 2. 'nnProb': a list of lists of tuples, each tuple is of the form (model, i ,term, j)
         # 3. 'atom': a list of list of atoms, where each list of atoms is corresponding to a prob. rule
         # 4. 'nnPrRuleNum': an integer denoting the number of probabilistic rules generated from NN
         self.mvpp = {'nnProb': [], 'atom': [], 'nnPrRuleNum': 0, 'program': ''}
-        self.yoloInfo = [] # a list of necessary info for yolo neural network to make prediction, each element is of the form [m, t, domain]
+        self.yoloInfo = [] # (beta version; used when e="yolo") a list for yolo neural network to make prediction, each element is of the form [m, t, domain]
         self.mvpp['program'], self.mvpp['program_pr'], self.mvpp['program_asp'] = self.parse(obs='')
         self.stableModels = [] # a list of stable models, where each stable model is a list
 
@@ -96,9 +96,9 @@ class NeurASP(object):
             # we have different translations when n = 2 (i.e., n = 1 in implementation) or when n > 2
             if n == 1:
                 for i in range(e):
-                    rule = '@0.0 {}({}, {}, {}); @0.0 {}({}, {}, {}).'.format(m, t, i, domain[0], m, t, i, domain[1])
-                    prob = [tuple((m, t, i, 0))]
-                    atoms = ['{}({}, {}, {})'.format(m, t, i, domain[0]), '{}({}, {}, {})'.format(m, t, i, domain[1])]
+                    rule = '@0.0 {}({}, {}, {}); @0.0 {}({}, {}, {}).'.format(m, i, t, domain[0], m, i, t, domain[1])
+                    prob = [tuple((m, i, t, 0))]
+                    atoms = ['{}({}, {}, {})'.format(m, i, t, domain[0]), '{}({}, {}, {})'.format(m, i, t, domain[1])]
                     mvppRules.append(rule)
                     self.mvpp['nnProb'].append(prob)
                     self.mvpp['atom'].append(atoms)
@@ -110,9 +110,9 @@ class NeurASP(object):
                     prob = []
                     atoms = []
                     for j in range(n):
-                        atom = '{}({}, {}, {})'.format(m, t, i, domain[j])
-                        rule += '@0.0 {}({}, {}, {}); '.format(m, t, i, domain[j])
-                        prob.append(tuple((m, t, i, j)))
+                        atom = '{}({}, {}, {})'.format(m, i, t, domain[j])
+                        rule += '@0.0 {}({}, {}, {}); '.format(m, i, t, domain[j])
+                        prob.append(tuple((m, i, t, j)))
                         atoms.append(atom)
                     mvppRules.append(rule[:-2]+'.')
                     self.mvpp['nnProb'].append(prob)
@@ -210,7 +210,7 @@ class NeurASP(object):
 
         # Step 3: turn the NN outputs (from usual classification neurual networks) into a set of MVPP probabilistic rules
         for ruleIdx in range(self.mvpp['nnPrRuleNum']):
-            probs = [self.nnOutputs[m][t][i*self.n[m]+j] for (m,t,i,j) in self.mvpp['nnProb'][ruleIdx]]
+            probs = [self.nnOutputs[m][t][i*self.n[m]+j] for (m, i, t, j) in self.mvpp['nnProb'][ruleIdx]]
             if len(probs) == 1:
                 mvppRules += '@{} {}; @{} {}.\n'.format(probs[0], self.mvpp['atom'][ruleIdx][0], 1 - probs[0], self.mvpp['atom'][ruleIdx][1])
             else:
@@ -308,7 +308,7 @@ class NeurASP(object):
                 if alpha < 1:
                     # Step 2.1: replace the parameters in the MVPP program with nn outputs
                     for ruleIdx in range(self.mvpp['nnPrRuleNum']):
-                        dmvpp.parameters[ruleIdx] = [self.nnOutputs[m][t][i*self.n[m]+j] for (m,t,i,j) in self.mvpp['nnProb'][ruleIdx]]
+                        dmvpp.parameters[ruleIdx] = [self.nnOutputs[m][t][i*self.n[m]+j] for (m, i, t, j) in self.mvpp['nnProb'][ruleIdx]]
                         if len(dmvpp.parameters[ruleIdx]) == 1:
                             dmvpp.parameters[ruleIdx] = [dmvpp.parameters[ruleIdx][0], 1-dmvpp.parameters[ruleIdx][0]]
 
@@ -353,7 +353,7 @@ class NeurASP(object):
                     # Step 2.4: update parameters in neural networks
                     gradientsNN = gradients[:self.mvpp['nnPrRuleNum']].tolist()
                     for ruleIdx in range(self.mvpp['nnPrRuleNum']):
-                        for probIdx, (m,t,i,j) in enumerate(self.mvpp['nnProb'][ruleIdx]):
+                        for probIdx, (m, i, t, j) in enumerate(self.mvpp['nnProb'][ruleIdx]):
                             self.nnGradients[m][t][i*self.n[m]+j] = (alpha - 1) * gradientsNN[ruleIdx][probIdx]
                     # Step 2.5: backpropogate
                     for m in nnOutput:
@@ -474,7 +474,7 @@ class NeurASP(object):
             # Step 2: turn the NN outputs into a set of ASP facts
             aspFacts = ''
             for ruleIdx in range(self.mvpp['nnPrRuleNum']):
-                probs = [self.nnOutputs[m][t][i*self.n[model]+j] for (m,t,i,j) in self.mvpp['nnProb'][ruleIdx]]
+                probs = [self.nnOutputs[m][t][i*self.n[model]+j] for (m, i, t, j) in self.mvpp['nnProb'][ruleIdx]]
                 if len(probs) == 1:
                     atomIdx = int(probs[0] < 0.5) # t is of index 0 and f is of index 1
                 else:

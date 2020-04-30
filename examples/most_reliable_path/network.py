@@ -13,9 +13,11 @@ seed_num = 1
 random.seed(seed_num)
 np.random.seed(seed_num)
 torch.manual_seed(seed_num)
+
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(seed_num)
     torch.backends.cudnn.deterministic = True
+
 class FC(nn.Module):
 
     def __init__(self, *sizes):
