@@ -44,7 +44,10 @@ NeurASPobj = NeurASP(dprogram, nnMapping, optimizers=None)
 # Load pretrained model
 ########
 
-saveModelPath = 'data/model_epoch75.pt'
+try:
+	saveModelPath = sys.argv[1]
+except:
+	saveModelPath = 'data/model_epoch60.pt'
 print('Loading the trained model from {}'.format(saveModelPath))
 m.load_state_dict(torch.load(saveModelPath, map_location='cpu'))
 
