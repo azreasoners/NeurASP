@@ -12,6 +12,10 @@ This example shows how common-sense reasoning can be applied to neural network o
   4. Construct a disctionary dataDic that maps each bi to a tensor of shape (1, len(domain)) denoting the probabilites of classifying bi to each class in the given domain.
 * network.py: a Python file that defines the network "label". Since Yolo already did classifications on bounding boxes with high accuracy, here we directly take the Yolo prediction as the final prediction.
 
+## Pretrained Model
+To make our NeurASP repository as small as possible, we put the pre-trained Yolo model on dropbox and list its download link below. To infer the relationships among objects in an image, you need to first download this model and move it into the yolo folder.
+* [yolov3.weights](https://www.dropbox.com/s/qakg1tw1hgd805e/yolov3.weights?dl=1)
+
 ## Inference and Interpreting the Result
 To start inference on these 2 images, execute the following command under this folder.
 ```
