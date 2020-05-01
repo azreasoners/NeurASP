@@ -2,7 +2,6 @@ from torch import nn
 import torch.nn.functional as F
 
 class Sudoku_Net(nn.Module):
-    #add relu after 1x1conv add FC layer, dropout, adaptive pooling
     def __init__(self):
         super(Sudoku_Net, self).__init__()
         self.conv1 = nn.Conv2d(1, 32,kernel_size=4,stride=2)

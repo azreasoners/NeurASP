@@ -47,7 +47,7 @@ rules['offset'] = rules['normal'] + '''
 '''
 
 ########
-# Define nnMapping and optimizers, initialze DeepLPMLN object
+# Define nnMapping and initialze NeurASP object
 ########
 
 m = Sudoku_Net()
