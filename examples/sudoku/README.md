@@ -19,6 +19,7 @@ To make our NeurASP repository as small as possible, we put our pre-trained mode
 * [model_data21.pt](https://www.dropbox.com/s/dun6dhe4uwh2vs9/model_data21.pt?dl=1)
 * [model_data23.pt](https://www.dropbox.com/s/za2zz6rqy5z6yss/model_data23.pt?dl=1)
 * [model_data25.pt](https://www.dropbox.com/s/a0t2n0yagpfbgtc/model_data25.pt?dl=1)
+
 If you want to use our pretrained models, please download them and move them under the data folder. 
 
 ## Train
