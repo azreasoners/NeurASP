@@ -9,8 +9,10 @@ In the Sudoku Solving problem, we use a neural network to learn to solve Sudoku 
 * network.py: a Python file that defines the network "sol".
 * solving_sudoku.ipynb: a Jupyter notebook for this example with detailed explanations to the codes
 
-## Pretrained Models
-To make our NeurASP repository as small as possible, we put our pre-trained models on dropbox and list their download links below. These pre-trained models are named as "model_epochX.pt" where X is the number of epochs taken for training.
+## Dataset and Pretrained Models
+To make our NeurASP repository as small as possible, we put the dataset and our pre-trained models on dropbox and list their download links below. The dataset is stored in 2 pickle files where "easy_130k_given.p" stores the configurations of the given boards and "easy_130k_solved.p" stores their solutions. The pre-trained models are named as "model_epochX.pt" where X is the number of epochs taken for training.
+* [easy_130k_given.p](https://www.dropbox.com/s/oyiwtchxdwyizcx/easy_130k_given.p?dl=1)
+* [easy_130k_solved.p](https://www.dropbox.com/s/p51trvljuhfa4bq/easy_130k_solved.p?dl=1)
 * [model_epoch10.pt](https://www.dropbox.com/s/pnebmwm3bstgdnz/model_epoch10.pt?dl=1)
 * [model_epoch20.pt](https://www.dropbox.com/s/rul0frvh90rrgl3/model_epoch20.pt?dl=1)
 * [model_epoch30.pt](https://www.dropbox.com/s/remjadql80epxnc/model_epoch30.pt?dl=1)
@@ -19,7 +21,7 @@ To make our NeurASP repository as small as possible, we put our pre-trained mode
 * [model_epoch60.pt](https://www.dropbox.com/s/nnadj2hfnptglrs/model_epoch60.pt?dl=1)
 * [model_epoch70.pt](https://www.dropbox.com/s/hiugu38uu6wjnu4/model_epoch70.pt?dl=1)
 
-If you want to use our pretrained models, please download them and move them into the data folder. 
+If you want to test on this example, please download the dataset files and move them into the data folder. If you want to use our pretrained models, please also download them and move them into the data folder. 
 
 ## Train
 To start training, execute the following command under this folder.
