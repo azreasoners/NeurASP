@@ -17,8 +17,8 @@ To make our NeurASP repository as small as possible, we put the pre-trained Yolo
 * [yolov3.weights](https://www.dropbox.com/s/qakg1tw1hgd805e/yolov3.weights?dl=1)
 
 ## Inference and Interpreting the Result
-To start inference on these 2 images, execute the following command under this folder.
+We provide 2 images in the data folder. To start inference on these 2 images, execute the following command under this folder.
 ```
 python infer.py
 ```
-For each image, we infer whether the objects in the image are toys or not by showing the most probable stable model of the NeurASP program. If the stable model contains, e.g., "toy(img,b1)", that means the bounding box b1 is a toy.
+For each image, we infer whether the objects in the image are toys or not by showing the most probable stable model of the NeurASP program. If the stable model contains, e.g., "toy(img,b1)", that means the bounding box b1 is a toy. If you want to test on your own image, just put your image into the data folder and run the above command. 
