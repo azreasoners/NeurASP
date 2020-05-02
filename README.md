@@ -21,3 +21,17 @@ Clone this repo:
 git clone https://github.com/azreasoners/NeurASP
 cd NeurASP
 ```
+
+## Examples
+We provide 3 inference and 5 learning examples as shown below. Each example is stored in a separate folder with a readme file.
+### Inference Examples
+* [Sudoku](https://github.com/azreasoners/NeurASP/tree/master/examples/sudoku)
+* [Offset Sudoku](https://github.com/azreasoners/NeurASP/tree/master/examples/offset_sudoku)
+* [Toy-car](https://github.com/azreasoners/NeurASP/tree/master/examples/toycar)
+
+### Learning Examples
+* [MNIST Addition](https://github.com/azreasoners/NeurASP/tree/master/examples/mnist)
+* [Shorstest Path](https://github.com/azreasoners/NeurASP/tree/master/examples/shortest_path)
+* [Sudoku Solving](https://github.com/azreasoners/NeurASP/tree/master/examples/solvingSudoku_70k)
+* [Top-k](https://github.com/azreasoners/NeurASP/tree/master/examples/top_k)
+* [Most Reliable Path](https://github.com/azreasoners/NeurASP/tree/master/examples/most_reliable_path)
