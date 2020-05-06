@@ -11,6 +11,7 @@ from Trainer import Test
 
 model = Sudoku_Net_Offset_bn().cuda()
 model.load_state_dict(torch.load('model_name'))
+
 # =============================================================================
 # Network Parameters
 # =============================================================================
@@ -25,10 +26,6 @@ criterion=torch.nn.BCELoss()
 # Testing
 # =============================================================================
 
-
-
-
-
-model=Test(model, train_loader, validation_loader, opt, criterion, epochs)
+model = Test(model, train_loader, validation_loader, opt, criterion, epochs)
 
  

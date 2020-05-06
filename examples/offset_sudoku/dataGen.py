@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 import torch.nn.functional as F
 from sklearn.model_selection import ShuffleSplit
 from torch.utils.data.sampler import SubsetRandomSampler
-
+from PIL import Image
 
 def save_pickle(obj,filename):
     with open(filename+'.p', 'wb') as fp:
@@ -73,7 +73,12 @@ def to_onehot(y,batch_size):
         one_hot_labels[i]=y_onehot.view(-1)
     return one_hot_labels
 
-
+def loadImage(path):
+    im_frame = Image.open(path)
+    np_frame = np.array(im_frame)
+    tensor_img = torch.from_numpy(np_frame).permute(2,0,1).float()
+    tensor_img = preprocessing(tensor_img).unsqueeze(0)
+    return tensor_img
 
 
 image_file='image_dict_offset.p'
@@ -84,7 +89,6 @@ label_file='label_dict_offset.p'
 normalize = transforms.Normalize([.5],[.5])
 preprocessing = transforms.Compose([
             transforms.ToPILImage(),
-            #transforms.Grayscale(),
             transforms.Resize((250,250)), #resize images original was 250, large was 350, small was 175
             transforms.ToTensor(),
             normalize

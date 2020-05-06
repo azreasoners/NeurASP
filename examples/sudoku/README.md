@@ -5,12 +5,13 @@ One great benefit is that we can use the same trained perception neural network 
 
 ## File Description
 * data: a folder containing 2 pickle files (storing the Sudoku images and their labels) and an example sudoku image that is used to show how NeurASP inference can be done on a Sudoku image.
-* train.py: a Python file that defines the NeurASP program and calls learn method in neurasp package.
+* baseline.py: a Python file which trains and tests the baseline NN.
+* train.py: a Python file that defines the NeurASP program and calls learn method in neurasp package to simulate baseline NN training.
 * test.py: a Python file that defines the NeurASP program and calls testNN method in neurasp package.
+* infer.py: a Python file that defines the NeurASP program and infer the solution of a given Sudoku image using both perception and reasoning.
 * dataGen.py: a Python file that load the train/test data and generate dataList, obsList (for training), and train_loader/test_loader (for computing the accuracy on training/testing data)
 * network.py: a Python file that defines the network "identify".
 * sudoku.ipynb: a Jupyter notebook for this example with detailed explanations to the codes
-* baseline.py: a Python file which trains and tests the baseline NN.
 
 ## Pretrained Models
 To make our NeurASP repository as small as possible, we put our pre-trained models on dropbox and list their download links below. These pre-trained models are named as "model_dataX.pt" where X is the number of data instances used for training.

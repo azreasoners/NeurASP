@@ -1,4 +1,3 @@
-
 import torch
 import torch.optim as optim
 
@@ -17,18 +16,15 @@ model.cuda()
 # Network Parameters
 # =============================================================================
 
-learning_rate=.0001
-epochs=2000
+learning_rate = .0001
+epochs = 2000
 
-opt=optim.Adam(model.parameters(),lr=learning_rate)
-criterion=torch.nn.BCELoss()
+opt = optim.Adam(model.parameters(),lr=learning_rate)
+criterion = torch.nn.BCELoss()
 
 # =============================================================================
 # Training
 # =============================================================================
 
-model=Train_Test(model, train_loader, validation_loader, opt, criterion, epochs)
-
- 
-torch.save(model.state_dict(), 'model_{0}train'.format(epochs))
-
+model = Train_Test(model, train_loader, validation_loader, opt, criterion, epochs)
+torch.save(model.state_dict(), 'model_data70.pt')
