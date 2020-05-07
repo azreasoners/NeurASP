@@ -12,6 +12,14 @@ For this task we use consider an offset Sudoku board for perception which is in 
 * network.py: a Python file that defines the network "identify".
 * offset_perception_noteobok.pynb: a Jupyter notebook for training the baseline.
 
+## Dataset and Pretrained Model
+To make our NeurASP repository as small as possible, we put the dataset and our pre-trained model on dropbox and list their download links below. The dataset is stored in 2 pickle files where "easy_130k_given.p" stores the configurations of the given boards and "easy_130k_solved.p" stores their solutions. The pre-trained models are named as "model_epochX.pt" where X is the number of epochs taken for training.
+* [image_dict_offset.p](https://www.dropbox.com/s/v8u4jf8u02n2zti/image_dict_offset.p?dl=1)
+* [label_dict_offset.p](https://www.dropbox.com/s/8kg4osfg222p5og/label_dict_offset.p?dl=1)
+* [model_data70.pt](https://www.dropbox.com/s/y955jjp2nkkvhay/model_data70.pt?dl=1)
+
+If you want to test on this example, please download the dataset files and move them into the data folder. If you want to use our pretrained model, please also download it and move it into the data folder. 
+
 ## Train
 To start training, execute the following command under this folder.
 ```

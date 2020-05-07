@@ -8,7 +8,6 @@ import torch
 
 import pickle 
 
-
 class Sudoku_Net_Offset_bn(nn.Module):
     #add relu after 1x1conv add FC layer, dropout, adaptive pooling
     def __init__(self):
@@ -33,7 +32,6 @@ class Sudoku_Net_Offset_bn(nn.Module):
         
         self.conv1x1_1=nn.Conv2d(in_channels=512,out_channels=10,kernel_size=1)
         
-        
     def forward(self, x):
         x = self.dropout1(self.conv1_bn(self.conv1(x)))
         x = F.relu(x)
@@ -54,12 +52,3 @@ class Sudoku_Net_Offset_bn(nn.Module):
         
         x=x.view(batch_size,81,10)
         return x
-
-
-
-
-
-
-
-
-

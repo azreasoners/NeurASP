@@ -81,8 +81,8 @@ def loadImage(path):
     return tensor_img
 
 
-image_file='image_dict_offset.p'
-label_file='label_dict_offset.p'
+image_file='data/image_dict_offset.p'
+label_file='data/label_dict_offset.p'
 
 #transform 
 
