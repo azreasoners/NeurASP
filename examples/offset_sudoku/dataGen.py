@@ -76,6 +76,7 @@ def to_onehot(y,batch_size):
 def loadImage(path):
     im_frame = Image.open(path)
     np_frame = np.array(im_frame)
+    np_frame = np_frame[...,:3]
     tensor_img = torch.from_numpy(np_frame).permute(2,0,1).float()
     tensor_img = preprocessing(tensor_img).unsqueeze(0)
     return tensor_img

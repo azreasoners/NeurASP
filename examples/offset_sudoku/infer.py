@@ -16,7 +16,7 @@ dprogram = '''
 nn(identify(81, img), [empty,1,2,3,4,5,6,7,8,9]).
 '''
 
-aspProgram = '''
+aspProgram = r'''
 % we assign one number at each position (R,C)
 a(R,C,N) :- identify(Pos, img, N), R=Pos/9, C=Pos\9, N!=empty.
 {a(R,C,N): N=1..9}=1 :- identify(Pos, img, empty), R=Pos/9, C=Pos\9.
