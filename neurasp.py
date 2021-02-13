@@ -12,7 +12,7 @@ from mvpp import MVPP
 
 
 class NeurASP(object):
-    def __init__(self, dprogram, nnMapping, optimizers, gpu=True):
+    def __init__(self, dprogram, nnMapping, optimizers, gpu=False):
 
         """
         @param dprogram: a string for a NeurASP program
@@ -268,7 +268,7 @@ class NeurASP(object):
             for dataIdx, data in enumerate(dataList):
                 # data is a dictionary. we need to edit its key if the key contains a defined const c
                 # where c is defined in rule #const c=v.
-                for key in data:
+                for key in list(data.keys()):
                     data[self.constReplacement(key)] = data.pop(key)
 
                 # Step 1: get the output of each neural network and initialize the gradients
@@ -463,7 +463,7 @@ class NeurASP(object):
         for dataIdx, data in enumerate(dataList):
             # data is a dictionary. we need to edit its key if the key contains a defined const c
             # where c is defined in rule #const c=v.
-            for key in data:
+            for key in list(data.keys()):
                 data[self.constReplacement(key)] = data.pop(key)
 
             # Step 1: get the output of each neural network
