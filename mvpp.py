@@ -50,7 +50,7 @@ class MVPP(object):
             sys.exit()
 
         for line in lines:
-            if re.match(r".*[0-1]\.?[0-9]*\s.*;.*", line):
+            if re.match(r"@?[0-9]\.?[0-9]*(?:e-[0-9]+)?\s.*;.*", line):
                 list_of_atoms = []
                 list_of_probs = []
                 list_of_bools = []
