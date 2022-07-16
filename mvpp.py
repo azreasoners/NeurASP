@@ -5,7 +5,7 @@ import re
 import sys
 import time
 
-import clingo
+from clingo.control import Control
 import numpy as np
 
 class MVPP(object):
@@ -117,11 +117,11 @@ class MVPP(object):
     # and each obs is written in constraint form
     def find_one_SM_under_obs(self, obs):
         program = self.pi_prime + obs
-        clingo_control = clingo.Control(["--warn=none"])
+        clingo_control = Control(["--warn=none"])
         models = []
         clingo_control.add("base", [], program)
         clingo_control.ground([("base", [])])
-        clingo_control.solve(None, lambda model: models.append(model.symbols(atoms=True)))
+        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)))
         models = [[str(atom) for atom in model] for model in models]
         return models
 
@@ -129,28 +129,28 @@ class MVPP(object):
     # and each obs is written in constraint form
     def find_all_SM_under_obs(self, obs):
         program = self.pi_prime + obs
-        clingo_control = clingo.Control(["0", "--warn=none"])
+        clingo_control = Control(["0", "--warn=none"])
         models = []
         try:
             clingo_control.add("base", [], program)
         except:
             print("\nPi': \n{}".format(program))
         clingo_control.ground([("base", [])])
-        clingo_control.solve(None, lambda model: models.append(model.symbols(atoms=True)))
+        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)))
         models = [[str(atom) for atom in model] for model in models]
         return models
 
     # k = 0 means to find all stable models
     def find_k_SM_under_obs(self, obs, k=3):
         program = self.pi_prime + obs
-        clingo_control = clingo.Control(["--warn=none", str(int(k))])
+        clingo_control = Control(["--warn=none", str(k)])
         models = []
         try:
             clingo_control.add("base", [], program)
         except:
             print("\nPi': \n{}".format(program))
         clingo_control.ground([("base", [])])
-        clingo_control.solve(None, lambda model: models.append(model.symbols(atoms=True)))
+        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)))
         models = [[str(atom) for atom in model] for model in models]
         return models
 
@@ -175,11 +175,11 @@ class MVPP(object):
                     penalty = int(-1000 * math.log(self.parameters[ruleIdx][atomIdx]))
                 program += ':~ {}. [{}, {}, {}]\n'.format(atom, penalty, ruleIdx, atomIdx)
 
-        clingo_control = clingo.Control(['--warn=none', '--opt-mode=optN', '0', '-t', '8'])
+        clingo_control = Control(['--warn=none', '--opt-mode=optN', '0', '-t', '8'])
         models = []
         clingo_control.add("base", [], program)
         clingo_control.ground([("base", [])])
-        clingo_control.solve(None, lambda model: models.append(model.symbols(atoms=True)) if model.optimality_proven else None)
+        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)) if model.optimality_proven else None)
         models = [[str(atom) for atom in model] for model in models]
         return self.remove_duplicate_SM(models)
 
@@ -197,11 +197,11 @@ class MVPP(object):
                     penalty = int(-1000 * math.log(self.parameters[ruleIdx][atomIdx]))
                 program += ':~ {}. [{}, {}, {}]\n'.format(atom, penalty, ruleIdx, atomIdx)
 
-        clingo_control = clingo.Control(['--warn=none', '-t', '8'])
+        clingo_control = Control(['--warn=none', '-t', '8'])
         models = []
         clingo_control.add("base", [], program)
         clingo_control.ground([("base", [])])
-        clingo_control.solve(None, lambda model: models.append(model.symbols(atoms=True)))
+        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)))
         models = [[str(atom) for atom in model] for model in models]
         return [models[-1]]
 
@@ -211,7 +211,7 @@ class MVPP(object):
 
         """
         program = self.pi_prime + obs
-        clingo_control = clingo.Control(['--warn=none', '--opt-mode=optN', '0'])
+        clingo_control = Control(['--warn=none', '--opt-mode=optN', '0'])
         models = []
         try:
             clingo_control.add("base", [], program)
@@ -219,7 +219,7 @@ class MVPP(object):
             print('\nSyntax Error in Program: Pi\': \n{}'.format(program))
             sys.exit()
         clingo_control.ground([("base", [])])
-        clingo_control.solve(None, lambda model: models.append(model.symbols(atoms=True)) if model.optimality_proven else None)
+        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)) if model.optimality_proven else None)
         models = [[str(atom) for atom in model] for model in models]
         return self.remove_duplicate_SM(models)
 
@@ -394,14 +394,14 @@ class MVPP(object):
     # it will generate k sample stable models for a k-coherent program under a specific total choice
     def k_sample(self):
         asp_with_facts = self.asp
-        clingo_control = clingo.Control(["0", "--warn=none"])
+        clingo_control = Control(["0", "--warn=none"])
         models = []
         for ruleIdx,list_of_atoms in enumerate(self.pc):
             tmp = np.random.choice(list_of_atoms, 1, p=self.parameters[ruleIdx])
             asp_with_facts += tmp[0]+".\n"
         clingo_control.add("base", [], asp_with_facts)
         clingo_control.ground([("base", [])])
-        result = clingo_control.solve(None, lambda model: models.append(model.symbols(shown=True)))
+        result = clingo_control.solve(on_model = lambda model: models.append(model.symbols(shown=True)))
         models = [[str(atom) for atom in model] for model in models]
         return models
 
@@ -419,14 +419,14 @@ class MVPP(object):
         while count < num:
             asp_with_facts = self.asp
             asp_with_facts += obs
-            clingo_control = clingo.Control(["0", "--warn=none"])
+            clingo_control = Control(["0", "--warn=none"])
             models_tmp = []
             for ruleIdx,list_of_atoms in enumerate(self.pc):
                 tmp = np.random.choice(list_of_atoms, 1, p=self.parameters[ruleIdx])
                 asp_with_facts += tmp[0]+".\n"
             clingo_control.add("base", [], asp_with_facts)
             clingo_control.ground([("base", [])])
-            result = clingo_control.solve(None, lambda model: models_tmp.append(model.symbols(shown=True)))
+            result = clingo_control.solve(on_model = lambda model: models_tmp.append(model.symbols(shown=True)))
             if str(result) == "SAT":
                 models_tmp = [[str(atom) for atom in model] for model in models_tmp]
                 count += len(models_tmp)
@@ -444,7 +444,7 @@ class MVPP(object):
         candidate_sm = []
         # we first find out all stable models that satisfy obs
         program = self.pi_prime + obs
-        clingo_control = clingo.Control(['0', '--warn=none'])
+        clingo_control = Control(['0', '--warn=none'])
         clingo_control.add('base', [], program)
         clingo_control.ground([('base', [])])
         clingo_control.solve(None, lambda model: candidate_sm.append(model.symbols(shown=True)))
@@ -454,14 +454,14 @@ class MVPP(object):
         while count < num:
             asp_with_facts = self.pi_prime
             asp_with_facts += obs
-            clingo_control = clingo.Control(["0", "--warn=none"])
+            clingo_control = Control(["0", "--warn=none"])
             models_tmp = []
             for ruleIdx,list_of_atoms in enumerate(self.pc):
                 tmp = np.random.choice(list_of_atoms, 1, p=self.parameters[ruleIdx])
                 asp_with_facts += tmp[0]+".\n"
             clingo_control.add("base", [], asp_with_facts)
             clingo_control.ground([("base", [])])
-            result = clingo_control.solve(None, lambda model: models_tmp.append(model.symbols(shown=True)))
+            result = clingo_control.solve(on_model = lambda model: models_tmp.append(model.symbols(shown=True)))
             if str(result) == "SAT":
                 models_tmp = [[str(atom) for atom in model] for model in models_tmp]
                 count += len(models_tmp)
