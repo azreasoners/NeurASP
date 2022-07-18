@@ -66,7 +66,7 @@ for i in range(41):
         print('\nContinuously Training for 100 Epochs -- Round {} ...'.format(i))
         time1 = time.time()
         # here alpha=1 means rules are not used in training, in other words, it's usual NN training with cross entropy loss
-        NeurASPobj.learn(dataList=dataList, obsList=obsList, alpha=1, epoch=100, lossFunc='cross')
+        NeurASPobj.learn(dataList=dataList, obsList=obsList, alpha=1, epoch=100, lossFunc='cross', bar=True)
         time2 = time.time()
         print("--- train time: %s seconds ---" % (time2 - time1))        
 

@@ -44,7 +44,7 @@ saveModelPath = 'data/model.pt'
 for i in range(20):
     print('Epoch {}...'.format(i+1))
     time1 = time.time()
-    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle')
+    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle', bar=True)
     time2 = time.time()
     NeurASPobj.testConstraint(dataListTest, obsListTest,[constraint])
     print('--- train time: %s seconds ---' % (time2 - time1))

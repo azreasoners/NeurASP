@@ -114,7 +114,7 @@ for idx, constraint in enumerate(combinations):
 for i in range(50):
     print('Continuously training for 10 epochs round {}...'.format(i+1))
     time1 = time.time()
-    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle')
+    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle', bar=True)
     time2 = time.time()
     NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=combinations)
     print("--- train time: %s seconds ---" % (time2 - time1))

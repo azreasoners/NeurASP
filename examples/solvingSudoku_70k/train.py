@@ -50,7 +50,7 @@ print('Initial test accuracy (whole board): {:0.2f}%\nInitial test accuracy (sin
 for i in range(100):
     print('Training for Epoch {}...'.format(i+1))
     time1 = time.time()
-    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=1, smPickle='data/stableModels.pickle')
+    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=1, smPickle='data/stableModels.pickle', bar=True)
     time2 = time.time()
     acc, singleAcc = NeurASPobj.testNN('sol', train_loader)
     print('Train Acc (whole board): {:0.2f}%'.format(acc))
