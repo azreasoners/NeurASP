@@ -25,7 +25,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
 ```
 
 ## Examples
-We provide 3 inference and 5 learning examples as shown below. Each example is stored in a separate folder with a readme file.
+We provide 3 inference and 5+4 learning examples as shown below. Each example is stored in a separate folder with a readme file.
 ### Inference Examples
 * [Sudoku](https://github.com/azreasoners/NeurASP/tree/master/examples/sudoku)
 * [Offset Sudoku](https://github.com/azreasoners/NeurASP/tree/master/examples/offset_sudoku)
@@ -37,6 +37,7 @@ We provide 3 inference and 5 learning examples as shown below. Each example is s
 * [Sudoku Solving](https://github.com/azreasoners/NeurASP/tree/master/examples/solvingSudoku_70k)
 * [Top-k](https://github.com/azreasoners/NeurASP/tree/master/examples/top_k)
 * [Most Reliable Path](https://github.com/azreasoners/NeurASP/tree/master/examples/most_reliable_path)
+* Examples from NeuroLog paper: [add2x2](https://github.com/azreasoners/NeurASP/tree/master/examples/add2x2), [apply2x2](https://github.com/azreasoners/NeurASP/tree/master/examples/apply2x2), [member3](https://github.com/azreasoners/NeurASP/tree/master/examples/member3), [member5](https://github.com/azreasoners/NeurASP/tree/master/examples/member5)
 
 ## Related Work
 You may also be interested in our work [Injecting Logical Constraints into Neural Networks via Straight-Through-Estimators](http://peace.eas.asu.edu/joolee/papers/ste-ns-icml.pdf). Its codes are available [here](https://github.com/azreasoners/cl-ste).
