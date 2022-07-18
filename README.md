@@ -32,8 +32,11 @@ We provide 3 inference and 5 learning examples as shown below. Each example is s
 * [Toy-car](https://github.com/azreasoners/NeurASP/tree/master/examples/toycar)
 
 ### Learning Examples
-* [MNIST Addition](https://github.com/azreasoners/NeurASP/tree/master/examples/mnist)
+* [MNIST Addition](https://github.com/azreasoners/NeurASP/tree/master/examples/mnistAdd)
 * [Shorstest Path](https://github.com/azreasoners/NeurASP/tree/master/examples/shortest_path)
 * [Sudoku Solving](https://github.com/azreasoners/NeurASP/tree/master/examples/solvingSudoku_70k)
 * [Top-k](https://github.com/azreasoners/NeurASP/tree/master/examples/top_k)
 * [Most Reliable Path](https://github.com/azreasoners/NeurASP/tree/master/examples/most_reliable_path)
+
+## Related Work
+You may also be interested in our work [Injecting Logical Constraints into Neural Networks via Straight-Through-Estimators](http://peace.eas.asu.edu/joolee/papers/ste-ns-icml.pdf). Its codes are available [here](https://github.com/azreasoners/cl-ste).

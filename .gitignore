@@ -1,5 +1,5 @@
 # Big files or data that can be downloaded
-examples/mnist/data/MNIST/
+examples/data/MNIST/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

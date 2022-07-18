@@ -7,6 +7,7 @@ import clingo
 import torch
 import numpy as np
 import torch.nn as nn
+from tqdm import tqdm
 
 from mvpp import MVPP
 
@@ -224,7 +225,7 @@ class NeurASP(object):
         return dmvpp.find_one_most_probable_SM_under_obs_noWC(obs=obs)
 
 
-    def learn(self, dataList, obsList, epoch, alpha=0, lossFunc='cross', method='exact', lr=0.01, opt=False, storeSM=False, smPickle=None, accEpoch=0, batchSize=1):
+    def learn(self, dataList, obsList, epoch, alpha=0, lossFunc='cross', method='exact', lr=0.01, opt=False, storeSM=False, smPickle=None, accEpoch=0, batchSize=1, bar=False):
         """
         @param dataList: a list of dictionaries, where each dictionary maps terms to either a tensor/np-array or a tuple (tensor/np-array, {'m': labelTensor})
         @param obsList: a list of strings, where each string is a set of constraints denoting an observation
@@ -234,6 +235,7 @@ class NeurASP(object):
         @param method: a string in {'exact', 'sampling'} denoting whether the gradients are computed exactly or by sampling
         @param lr: a real number between 0 and 1 denoting the learning rate for the probabilities in probabilistic rules
         @param batchSize: a positive interger denoting the batch size, i.e., how many data instances do we use to update the NN parameters for once
+        @param bar: a boolean value denoting whether to show a bar to visualize training process
         """
         assert len(dataList) == len(obsList), 'Error: the length of dataList does not equal to the length of obsList'
         assert alpha >= 0 and alpha <= 1, 'Error: the value of alpha should be within [0, 1]'
@@ -265,7 +267,8 @@ class NeurASP(object):
         # we train for 'epoch' times of epochs
         for epochIdx in range(epoch):
             # for each training instance in the training data
-            for dataIdx, data in enumerate(dataList):
+            iterator = enumerate(tqdm(dataList)) if bar else enumerate(dataList)
+            for dataIdx, data in iterator:
                 # data is a dictionary. we need to edit its key if the key contains a defined const c
                 # where c is defined in rule #const c=v.
                 for key in list(data.keys()):
@@ -408,19 +411,20 @@ class NeurASP(object):
         with torch.no_grad():
             for data, target in testLoader:
                 output = self.nnMapping[nn](data.to(self.device))
-                if self.n[nn] > 2 :
-                    pred = output.argmax(dim=-1, keepdim=True) # get the index of the max log-probability
-                    target = target.to(self.device).view_as(pred)
-                    correctionMatrix = (target.int() == pred.int()).view(target.shape[0], -1)
-                    correct += correctionMatrix.all(1).sum().item()
-                    total += target.shape[0]
-                    singleCorrect += correctionMatrix.sum().item()
-                    singleTotal += target.numel()
-                else: 
-                    pred = np.array([int(i[0]<0.5) for i in output.tolist()])
-                    target = target.numpy()
-                    correct += (pred.reshape(target.shape) == target).sum()
-                    total += len(pred)
+                if target.shape == output.shape[:-1]:
+                    pred = output.argmax(dim=-1) # get the index of the max value
+                elif target.shape == output.shape:
+                    pred = (output >= 0.5).int()
+                else:
+                    print(f'Error: none considered case for output with shape {output.shape} v.s. label with shape {target.shape}')
+                    sys.exit()
+                target = target.to(self.device).view_as(pred)
+                correctionMatrix = (target.int() == pred.int()).view(target.shape[0], -1)
+                correct += correctionMatrix.all(1).sum().item()
+                total += target.shape[0]
+                singleCorrect += correctionMatrix.sum().item()
+                singleTotal += target.numel()
+
         accuracy = 100. * correct / total
         singleAccuracy = 100. * singleCorrect / singleTotal
         return accuracy, singleAccuracy
