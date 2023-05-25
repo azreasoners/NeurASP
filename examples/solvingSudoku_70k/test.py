@@ -37,7 +37,7 @@ a(R,C,N) :- sol(Pos, config, N), R=Pos/9, C=Pos\9.
 ########
 
 m = Sudoku_Net()
-nnMapping = {'sol': m}
+nnMapping = {'predict': m}
 NeurASPobj = NeurASP(dprogram, nnMapping, optimizers=None)
 
 ########

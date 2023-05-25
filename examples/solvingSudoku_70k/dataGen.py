@@ -42,7 +42,7 @@ class Sudoku_dataset(Dataset):
         y=self.label_dict[filename]
         y=torch.from_numpy(y)
         y=y-1
-        return x,y
+        return x,y.reshape(81)
 
 def to_onehot(y,batch_size):
     ''' creates a one hot vector for the labels. y_onehot will be of shape (batch_size, 810)'''
