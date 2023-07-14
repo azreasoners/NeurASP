@@ -40,4 +40,4 @@ We provide 3 inference and 5+4 learning examples as shown below. Each example is
 * Examples from NeuroLog paper: [add2x2](https://github.com/azreasoners/NeurASP/tree/master/examples/add2x2), [apply2x2](https://github.com/azreasoners/NeurASP/tree/master/examples/apply2x2), [member3](https://github.com/azreasoners/NeurASP/tree/master/examples/member3), [member5](https://github.com/azreasoners/NeurASP/tree/master/examples/member5)
 
 ## Related Work
-You may also be interested in our work [Injecting Logical Constraints into Neural Networks via Straight-Through-Estimators](http://peace.eas.asu.edu/joolee/papers/ste-ns-icml.pdf). Its codes are available [here](https://github.com/azreasoners/cl-ste).
+You may also be interested in our work [Injecting Logical Constraints into Neural Networks via Straight-Through-Estimators](https://azreasoners.github.io/ARG-webpage/pdfs/ste-ns-icml.pdf). Its codes are available [here](https://github.com/azreasoners/cl-ste).
