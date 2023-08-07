@@ -275,8 +275,8 @@ class NeurASP(object):
                     data[self.constReplacement(key)] = data.pop(key)
 
                 # Step 1: get the output of each neural network and initialize the gradients
+                nnOutput = {}
                 for m in self.nnOutputs:
-                    nnOutput = {}
                     nnOutput[m] = {}
                     for t in self.nnOutputs[m]:
                         labelTensor = None
