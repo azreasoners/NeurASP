@@ -1,5 +1,5 @@
 # NeurASP
-NeurASP: Neural Networks + Answer Set Programs
+[NeurASP: Embracing Neural Networks into Answer Set Programming](https://www.ijcai.org/proceedings/2020/0243.pdf)
 
 # Introduction
 NeurASP is a simple extension of answer set programs by embracing neural networks. By treating the neural network output as the probability distribution over atomic facts in answer set programs, NeurASP provides a simple and effective way to integrate sub-symbolic and symbolic computation. This repository includes examples to show
