@@ -41,3 +41,23 @@ We provide 3 inference and 5+4 learning examples as shown below. Each example is
 
 ## Related Work
 You may also be interested in our work [Injecting Logical Constraints into Neural Networks via Straight-Through-Estimators](https://azreasoners.github.io/ARG-webpage/pdfs/ste-ns-icml.pdf). Its codes are available [here](https://github.com/azreasoners/cl-ste).
+
+## Citation
+Please cite our paper as:
+```
+@inproceedings{ijcai2020p243,
+  title     = {NeurASP: Embracing Neural Networks into Answer Set Programming},
+  author    = {Yang, Zhun and Ishay, Adam and Lee, Joohyung},
+  booktitle = {Proceedings of the Twenty-Ninth International Joint Conference on
+               Artificial Intelligence, {IJCAI-20}},
+  publisher = {International Joint Conferences on Artificial Intelligence Organization},
+  editor    = {Christian Bessiere},
+  pages     = {1755--1762},
+  year      = {2020},
+  month     = {7},
+  note      = {Main track},
+  doi       = {10.24963/ijcai.2020/243},
+  url       = {https://doi.org/10.24963/ijcai.2020/243},
+}
+
+```
