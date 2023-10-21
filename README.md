@@ -1,6 +1,6 @@
 # NeurASP
 This is the implementation of [NeurASP: Embracing Neural Networks into Answer Set Programming](https://www.ijcai.org/proceedings/2020/0243.pdf).
-
+[Lab page](https://azreasoners.github.io/ARG-webpage/)
 # Introduction
 NeurASP is a simple extension of answer set programs by embracing neural networks. By treating the neural network output as the probability distribution over atomic facts in answer set programs, NeurASP provides a simple and effective way to integrate sub-symbolic and symbolic computation. This repository includes examples to show
 1. how NeurASP can make use of pretrained neural networks in symbolic computation and how it can improve the perception accuracy of a neural network by applying symbolic reasoning in answer set programming; and
