@@ -115,6 +115,8 @@ for i in range(50):
     print('Continuously training for 10 epochs round {}...'.format(i+1))
     time1 = time.time()
     NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle', bar=True)
+    # If training MLP with just labels, use this line instead of above. Also change training_just_with_labels to True in dataGen.py
+    # NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle', bar=True, alpha=1, lossFunc=torch.nn.BCELoss())
     time2 = time.time()
     NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=combinations)
     print("--- train time: %s seconds ---" % (time2 - time1))
