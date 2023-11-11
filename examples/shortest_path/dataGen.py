@@ -74,12 +74,16 @@ def generateDataset(inPath, outPath):
 dataset = generateDataset('data/shortestPath.data', 'data/shorteatPath_')
 
 # for training
+training_just_with_labels = False
 obsList = []
 with open('data/shorteatPath_train.txt', 'r') as f:
     obsList = f.read().strip().strip('#evidence').split('#evidence')
 dataList = []
-for data in dataset['train']:
-    dataList.append({'g': Variable(torch.from_numpy(data).float(), requires_grad=False)})
+for data, label in zip(dataset['train'], dataset['train_label']):
+    if training_just_with_labels:
+        dataList.append({'g': (Variable(torch.from_numpy(data).float(), requires_grad=False), {'sp': Variable(torch.from_numpy(label).float().view(-1, 1), requires_grad=False)})})
+    else:
+        dataList.append({'g': Variable(torch.from_numpy(data).float(), requires_grad=False)})
 
 # for testing
 obsListTest = []
