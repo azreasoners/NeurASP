@@ -204,13 +204,14 @@ class MVPP(object):
         """
         program = self.pi_prime + obs + '\n'
         # for each probabilistic rule with n atoms, add n weak constraints
-        for ruleIdx, atoms in enumerate(self.pc):
-            for atomIdx, atom in enumerate(atoms):
-                if self.parameters[ruleIdx][atomIdx] < 0.00674:
+        for ruleIdx, atom in enumerate(self.pc):
+            for valueIdx, value in enumerate(self.pc[atom]):
+                if self.parameters[ruleIdx][valueIdx] < 0.00674:
                     penalty = -1000 * -5
                 else:
-                    penalty = int(-1000 * math.log(self.parameters[ruleIdx][atomIdx]))
-                program += ':~ {}. [{}, {}, {}]\n'.format(atom, penalty, ruleIdx, atomIdx)
+                    penalty = int(-1000 * math.log(self.parameters[ruleIdx][valueIdx]))
+                atom_name = f"{atom.split('/')[0]}({atom.split(':')[1]},{value})"
+                program += ':~ {}. [{}, {}, {}]\n'.format(atom_name, penalty, ruleIdx, valueIdx)
 
         clingo_control = Control(['--warn=none', '--opt-mode=optN', '0', '-t', '8'])
         models = []
