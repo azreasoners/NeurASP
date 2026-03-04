@@ -65,6 +65,8 @@ nnMapping = {'mrp': m}
 optimizer = {'mrp': torch.optim.Adam(m.parameters(), lr=0.001)}
 NeurASPobj = NeurASP(dprogram+aspProgram, nnMapping, optimizer)
 
+dataset = list(zip(dataList, obsList))
+
 ########
 # Start training and testing
 ########
@@ -74,7 +76,7 @@ saveModelPath = 'data/model.pt'
 for i in range(20):
     print('Continuously training for 10 epochs round {}...'.format(i+1))
     time1 = time.time()
-    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle', bar=True)
+    NeurASPobj.learn(dataset, epoch=10, opt=True, bar=True, task='most_reliable_path')
     time2 = time.time()
     NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=[aspProgram])
     print("--- train time: %s seconds ---" % (time2 - time1))

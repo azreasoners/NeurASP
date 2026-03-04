@@ -4,17 +4,17 @@ import os.path
 import re
 import sys
 import time
+import torch
 
 from clingo.control import Control
 import numpy as np
+
 
 class MVPP(object):
     def __init__(self, program, k=1, eps=0.000001):
         self.k = k
         self.eps = eps
 
-        # each element in self.pc is a list of atoms (one list for one prob choice rule)
-        self.pc = []
         # each element in self.parameters is a list of probabilities
         self.parameters = []
         # each element in self.learnable is a list of Boolean values
@@ -26,18 +26,18 @@ class MVPP(object):
         # self.remain_probs is a list of probs, each denotes a remaining prob given those non-learnable probs
         self.remain_probs = []
 
+        # self.pc: dictionary of concepts
         self.pc, self.parameters, self.learnable, self.asp, self.pi_prime, self.remain_probs = self.parse(program)
         self.normalize_probs()
 
     def parse(self, program):
-        pc = []
+        pc = {}
         parameters = []
         learnable = []
         asp = ""
         pi_prime = ""
         remain_probs = []
 
-        lines = []
         # if program is a file
         if os.path.isfile(program):
             with open(program, 'r') as program:
@@ -65,12 +65,24 @@ class MVPP(object):
                     else:
                         list_of_probs.append(float(prob))
                         list_of_bools.append(False)
-                pc.append(list_of_atoms)
+
+                    # Fill in pc so that each concept entry contains a list of all the values it can take
+                    split_list = atom.split('(')
+                    concept_name = split_list[0]
+                    concept_args = split_list[1].replace(" ", "")
+                    # Create a unique id for each concept
+                    concept_id = f"{concept_name}/{len(concept_args.split(','))}:{concept_args.split(',')[0]},{concept_args.split(',')[1]}"
+                    concept_value = concept_args.split(',')[-1].split(')')[0].strip()
+                    if concept_id not in pc:
+                        pc[concept_id] = [concept_value]
+                    else:
+                        pc[concept_id].append(concept_value)
+
                 parameters.append(list_of_probs)
                 learnable.append(list_of_bools)
-                pi_prime += "1{"+"; ".join(list_of_atoms)+"}1.\n"
+                pi_prime += "1{" + "; ".join(list_of_atoms) + "}1.\n"
             else:
-                asp += (line.strip()+"\n")
+                asp += (line.strip() + "\n")
 
         pi_prime += asp
 
@@ -88,9 +100,9 @@ class MVPP(object):
             # 1st, we turn each probability into [0+eps,1-eps]
             for atomIdx, b in enumerate(list_of_bools):
                 if b == True:
-                    if self.parameters[ruleIdx][atomIdx] >=1 :
-                        self.parameters[ruleIdx][atomIdx] = 1- self.eps
-                    elif self.parameters[ruleIdx][atomIdx] <=0:
+                    if self.parameters[ruleIdx][atomIdx] >= 1:
+                        self.parameters[ruleIdx][atomIdx] = 1 - self.eps
+                    elif self.parameters[ruleIdx][atomIdx] <= 0:
                         self.parameters[ruleIdx][atomIdx] = self.eps
 
             # 2nd, we normalize the probabilities
@@ -99,21 +111,17 @@ class MVPP(object):
                     summation += self.parameters[ruleIdx][atomIdx]
             for atomIdx, b in enumerate(list_of_bools):
                 if b == True:
-                    self.parameters[ruleIdx][atomIdx] = self.parameters[ruleIdx][atomIdx] / summation * self.remain_probs[ruleIdx]
+                    self.parameters[ruleIdx][atomIdx] = self.parameters[ruleIdx][atomIdx] / summation * \
+                                                        self.remain_probs[ruleIdx]
         return True
 
-    def prob_of_interpretation(self, I):
-        prob = 1.0
-        # I must be a list of atoms, where each atom is a string
-        while not isinstance(I[0], str):
-            I = I[0]
-        for ruleIdx,list_of_atoms in enumerate(self.pc):
-            for atomIdx, atom in enumerate(list_of_atoms):
-                if atom in I:
-                    prob = prob * self.parameters[ruleIdx][atomIdx]
-        return prob
+    def prob_of_interpretation(self, models):
+        net_confs = torch.stack(self.parameters)
+        concept_indices = torch.arange(len(net_confs)).repeat(len(models), 1)
+        probs = net_confs[concept_indices, models].prod(1)
+        return probs
 
-    # we assume obs is a string containing a valid Clingo program, 
+    # We assume obs is a string containing a valid Clingo program,
     # and each obs is written in constraint form
     def find_one_SM_under_obs(self, obs):
         program = self.pi_prime + obs
@@ -121,11 +129,11 @@ class MVPP(object):
         models = []
         clingo_control.add("base", [], program)
         clingo_control.ground([("base", [])])
-        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)))
+        clingo_control.solve(on_model=lambda model: models.append(model.symbols(atoms=True)))
         models = [[str(atom) for atom in model] for model in models]
         return models
 
-    # we assume obs is a string containing a valid Clingo program, 
+    # We assume obs is a string containing a valid Clingo program,
     # and each obs is written in constraint form
     def find_all_SM_under_obs(self, obs):
         program = self.pi_prime + obs
@@ -140,25 +148,54 @@ class MVPP(object):
         models = [[str(atom) for atom in model] for model in models]
         return models
 
-    # k = 0 means to find all stable models
-    def find_k_SM_under_obs(self, obs, k=3):
-        program = self.pi_prime + obs
-        clingo_control = Control(["--warn=none", str(k)])
+    def model_to_network_preds(self, m):
+        # Extract network predictions from stable model
+        m = str(m).split(' ')
+        network_preds = [0 for _ in m]
+        for atom in m:
+            split_list = atom.split('(')
+            concept_name = split_list[0]
+            concept_args = split_list[1].replace(" ", "")
+            concept_id = f"{concept_name}/{len(concept_args.split(','))}:{concept_args.split(',')[0]},{concept_args.split(',')[1]}"
+            concept_value = concept_args.split(',')[-1].split(')')[0].strip()
+            # Maintain order of concepts from pc
+            network_preds[list(self.pc).index(concept_id)] = self.pc[concept_id].index(concept_value)
+        return network_preds
+
+    def find_k_SM_under_obs(self, obs, k=3, opt=False):
+        # Create show statements so clingo only outputs neural concepts
+        show_list = []
+        for pc in self.pc:
+            show_item = f"#show {pc.split(':')[0]}."
+            if show_item not in show_list:
+                show_list.append(show_item)
+        show_string = ' '.join(show_list)
+
+        program = self.pi_prime + obs + show_string
+        if opt:
+            clingo_control = Control(["--warn=none", '--opt-mode=optN', str(k)])
+            def model_fun(model):
+                if model.optimality_proven:
+                    models.append(self.model_to_network_preds(model))
+        else:
+            clingo_control = Control(["--warn=none", str(k)])
+            def model_fun(model):
+                models.append(self.model_to_network_preds(model))
+
         models = []
         try:
             clingo_control.add("base", [], program)
         except:
             print("\nPi': \n{}".format(program))
         clingo_control.ground([("base", [])])
-        clingo_control.solve(on_model = lambda model: models.append(model.symbols(atoms=True)))
-        models = [[str(atom) for atom in model] for model in models]
-        return models
+        clingo_control.solve(on_model=model_fun)
+        return torch.IntTensor(models)
 
     # there might be some duplications in SMs when optimization option is used
     # and the duplications are removed by this method
     def remove_duplicate_SM(self, models):
         models.sort()
-        return list(models for models,_ in itertools.groupby(models))
+        return list(models for models, _ in itertools.groupby(models))
 
     # Note that the MVPP program cannot contain weak constraints
     def find_all_most_probable_SM_under_obs_noWC(self, obs):
@@ -259,71 +296,28 @@ class MVPP(object):
         gradient = (p_obs_i-p_obs_j)/p_obs
         return gradient
 
-    def mvppLearnRule(self, ruleIdx, models, probs):
-        """Return a np array denoting the gradients for the probabilities in rule ruleIdx
+    def mvppLearnRule(self, models, probs, num_out):
+        net_confs = torch.stack(self.parameters)
+        denominator = sum(probs)
+        if denominator == 0:
+            return torch.zeros(len(self.learnable), num_out)
 
-        @param ruleIdx: an integer denoting a rule index
-        @param models: the list of models that satisfy an underlined observation O, each model is a list of string
-        @param probs: a list of probabilities, one for each model
-        """
-        
-        gradients = []
-        # if there is only 1 stable model, we learn from complete interpretation
-        if len(models) == 1:
-            model = models[0]
-            # we compute the gradient for each p_i in the ruleIdx-th rule
-            p = 0
-            for i, cEqualsVi in enumerate(self.pc[ruleIdx]):
-                if cEqualsVi in model:
-                    gradients.append(1.0)
-                    p = self.parameters[ruleIdx][i]
-                else:
-                    gradients.append(-1.0)
-            for i, cEqualsVi in enumerate(self.pc[ruleIdx]):
-                gradients[i] = gradients[i]/p
+        concept_indices = torch.arange(len(net_confs)).repeat(len(models), 1)
+        concept_probs = net_confs[concept_indices, models]
 
-        # if there are more than 1 stable models, we use the equation in the proposition in the NeurASP paper
-        else:
-            denominator = sum(probs)
-            # we compute the gradient for each p_i in the ruleIdx-th rule
-            for i, cEqualsVi in enumerate(self.pc[ruleIdx]):
-                numerator = 0
-                # we accumulate the numerator by looking at each model I that satisfies O
-                for modelIdx, model in enumerate(models):
-                    # if I satisfies cEqualsVi
-                    if cEqualsVi in model:
-                        if self.parameters[ruleIdx][i] != 0:
-                            numerator += probs[modelIdx] / self.parameters[ruleIdx][i]
-                        else:
-                            numerator += probs[modelIdx] / (self.parameters[ruleIdx][i] + self.eps)
+        weighted_probs = probs.view(len(probs),1) / concept_probs
+        nums_out = torch.arange(num_out)
+        multiplication_factor = (models.unsqueeze(-1) == nums_out).float() * 2 - 1
+        gradients = (weighted_probs.unsqueeze(-1) * multiplication_factor).sum(0) / denominator
 
-
-                    # if I does not satisfy cEqualsVi
-                    else:
-                        for atomIdx, atom in enumerate(self.pc[ruleIdx]):
-                            if atom in model:
-                                if self.parameters[ruleIdx][atomIdx]!=0:
-                                    numerator -= probs[modelIdx] / self.parameters[ruleIdx][atomIdx]
-                                else:
-                                    numerator -= probs[modelIdx] / (self.parameters[ruleIdx][atomIdx]+self.eps)
-
-                if denominator == 0 :
-                    gradients.append(0)
-                else:
-                    gradients.append(numerator / denominator)
-        return np.array(gradients)
+        return gradients
 
     def mvppLearn(self, models):
-        probs = [self.prob_of_interpretation(model) for model in models]
-        gradients = np.array([[0.0 for item in l] for l in self.parameters])
+        probs = self.prob_of_interpretation(models)
         if len(models) != 0:
-            # we compute the gradients w.r.t. the probs in each rule
-            for ruleIdx,list_of_bools in enumerate(self.learnable):
-                gradients[ruleIdx] = self.mvppLearnRule(ruleIdx, models, probs)
-                for atomIdx, b in enumerate(list_of_bools):
-                    if b == False:
-                        gradients[ruleIdx][atomIdx] = 0
-        return gradients
+            return self.mvppLearnRule(models, probs, len(self.learnable[0]))
+        else:
+            return [[0.0 for item in l] for l in self.parameters]
 
     # gradients are stored in numpy array instead of list
     # obs is a string
@@ -332,10 +326,8 @@ class MVPP(object):
         @param obs: a string for observation
         @param opt: a Boolean denoting whether we use optimal stable models instead of stable models
         """
-        if opt:
-            models = self.find_all_opt_SM_under_obs_WC(obs)
-        else:
-            models = self.find_k_SM_under_obs(obs, k=0)
+        models = self.find_k_SM_under_obs(obs, k=0, opt=opt)
+
         return self.mvppLearn(models)
 
     # gradients are stored in numpy array instead of list
