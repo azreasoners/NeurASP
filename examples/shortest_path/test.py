@@ -87,6 +87,7 @@ combinations = [aspRule + ''.join([constraints[c] for c in combination]) for com
 m = FC(40, 50, 50, 50, 50, 50, 24)
 nnMapping = {'sp': m}
 NeurASPobj = NeurASP(nnRule, nnMapping, optimizers=None)
+dataset = list(zip(dataListTest, obsListTest))
 
 ########
 # Load pretrained model
@@ -98,4 +99,4 @@ m.load_state_dict(torch.load(saveModelPath, map_location='cpu'))
 ########
 # Start testing
 ########
-NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=combinations)
+NeurASPobj.testConstraint(dataset, mvppList=combinations)

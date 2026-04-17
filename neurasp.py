@@ -243,6 +243,17 @@ class NeurASP(object):
         @param task: a string representing the name of the task, used when logging results
         """
 
+        # Set info variables for logging
+        if hasattr(dataset, 'dataset'):
+            # Dataset is a dataloader
+            dataset_name = type(dataset.dataset).__name__
+        else:
+            dataset_name = type(dataset).__name__
+        if hasattr(dataset, 'batch_size'):
+            batch_size = dataset.batch_size
+        else:
+            batch_size = 'unknown'
+
         # If storeSM is true, we try to load stable models from the corresponding file
         # Otherwise, we will save it into a file at the end of the first epoch
         savePickle = False
@@ -250,7 +261,7 @@ class NeurASP(object):
             try:
                 with open(f'saved_models/{task}_stable_models.pkl', 'rb') as fp:
                     self.stableModels = pickle.load(fp)
-                print("Successfully loaded stable models.")
+                print("Using cached stable model file.")
             except FileNotFoundError:
                 savePickle = True
         bestDownAcc = 0
@@ -380,9 +391,9 @@ class NeurASP(object):
 
                 # Calculate and print training accuracy every accStep steps
                 if accStep != 0 and (epochIdx == 0 and dataIdx == 0 or (dataIdx + 1) % accStep == 0):
-                    results = {'algorithm': 'NeurASP', 'dataset': type(dataset).__name__, 'task': task,
+                    results = {'algorithm': 'NeurASP', 'dataset': dataset_name, 'task': task,
                                'seed': seed,
-                               'epoch': epochIdx, 'step': dataIdx + 1, 'batch_size': dataset.batch_size}
+                               'epoch': epochIdx, 'step': dataIdx + 1, 'batch_size': batch_size}
                     print(f"\nEpoch {epochIdx}, step {dataIdx + 1}:")
 
                     for m in self.nnMapping:
@@ -467,43 +478,41 @@ class NeurASP(object):
         accuracy = 100. * correct / total
         singleAccuracy = 100. * singleCorrect / singleTotal
         return accuracy, singleAccuracy
-    
-    # We interprete the most probable stable model(s) as the prediction of the inference mode
-    # and check the accuracy of the inference mode by checking whether the obs is satisfied by the prediction
-    def testInferenceResults(self, dataList, obsList):
+
+    # We interpret the most probable stable model(s) as the prediction of the inference mode
+    # and calculate the accuracy by checking whether the obs is satisfied by the prediction
+    def testInferenceResults(self, dataset):
         """ Return a real number in [0,1] denoting the accuracy
-        @param dataList: a list of dictionaries, where each dictionary maps terms to tensors/np-arrays
-        @param obsList: a list of strings, where each string is a set of constraints denoting an observation
+        @param dataset: a dataset consisting of inputs and observations,
+                        each input is a dict, mapping terms to a tensor,
+                        each observation is a string, denoting a set of constraints
         """
-        assert len(dataList) == len(obsList), 'Error: the length of dataList does not equal to the length of obsList'
 
         correct = 0
-        for dataIdx, data in enumerate(dataList):
+        for data, obs in dataset:
             models = self.infer(data, obs=':- mistake.', mvpp=self.mvpp['program_asp'])
             for model in models:
-                if self.satisfy(model, obsList[dataIdx]):
+                if self.satisfy(model, obs):
                     correct += 1
                     break
-        accuracy = 100. * correct / len(dataList)
+        accuracy = 100. * correct / len(dataset)
         return accuracy
 
-
-    def testConstraint(self, dataList, obsList, mvppList):
+    def testConstraint(self, dataset, mvppList):
         """
-        @param dataList: a list of dictionaries, where each dictionary maps terms to tensors/np-arrays
-        @param obsList: a list of strings, where each string is a set of constraints denoting an observation
+        @param dataset: a dataset consisting of inputs and observations,
+                        each input is a dict, mapping terms to a tensor,
+                        each observation is a string, denoting a set of constraints
         @param mvppList: a list of MVPP programs (each is a string)
         """
-        assert len(dataList) == len(obsList), 'Error: the length of dataList does not equal to the length of obsList'
-
-        # we evaluate all nerual networks
+        # we evaluate all neural networks
         for func in self.nnMapping:
             self.nnMapping[func].eval()
 
         # we count the correct prediction for each mvpp program
         count = [0]*len(mvppList)
 
-        for dataIdx, data in enumerate(dataList):
+        for data, obs in dataset:
             # data is a dictionary. we need to edit its key if the key contains a defined const c
             # where c is defined in rule #const c=v.
             for key in list(data.keys()):
@@ -527,26 +536,26 @@ class NeurASP(object):
             # Step 3: check whether each MVPP program is satisfied
             for programIdx, program in enumerate(mvppList):
                 # if the program has weak constraints
-                if re.search(r':~.+\.[ \t]*\[.+\]', program) or re.search(r':~.+\.[ \t]*\[.+\]', obsList[dataIdx]):
+                if re.search(r':~.+\.[ \t]*\[.+\]', program) or re.search(r':~.+\.[ \t]*\[.+\]', obs):
                     choiceRules = ''
                     for ruleIdx in range(self.mvpp['nnPrRuleNum']):
                         choiceRules += '1{' + '; '.join(self.mvpp['atom'][ruleIdx]) + '}1.\n'
-                    mvpp = MVPP(program+choiceRules)
-                    models = mvpp.find_all_opt_SM_under_obs_WC(obs=obsList[dataIdx])
-                    models = [set(model) for model in models] # each model is a set of atoms
+                    mvpp = MVPP(program + choiceRules)
+                    models = mvpp.find_all_opt_SM_under_obs_WC(obs=obs)
+                    models = [set(model) for model in models]  # each model is a set of atoms
                     targetAtoms = aspFacts.split('.\n')
-                    targetAtoms = set([atom.strip().replace(' ','') for atom in targetAtoms if atom.strip()])
+                    targetAtoms = set([atom.strip().replace(' ', '') for atom in targetAtoms if atom.strip()])
                     if any(targetAtoms.issubset(model) for model in models):
                         count[programIdx] += 1
                 else:
                     mvpp = MVPP(aspFacts + program)
-                    if mvpp.find_one_SM_under_obs(obs=obsList[dataIdx]):
+                    if mvpp.find_one_SM_under_obs(obs=obs):
                         count[programIdx] += 1
         for programIdx, program in enumerate(mvppList):
             print(
-                'The accuracy for constraint {} is {}'.format(programIdx + 1, float(count[programIdx]) / len(dataList)))
+                'The accuracy for constraint {} is {}'.format(programIdx + 1, float(count[programIdx]) / len(dataset)))
 
-    def calculate_accuracies(self, dataset, dmvpp, storeSM, opt):
+    def calculate_accuracies(self, dataset, dmvpp, storeSM=True, opt=False):
         """
         Calculates latent and downstream accuracies of all neural networks in task.
         @param dataset: A dataset consisting of inputs and observations, and optionally latent labels
@@ -559,6 +568,7 @@ class NeurASP(object):
         downstreamAccuracy = 0
         for func in self.nnMapping:
             self.nnMapping[func].eval()
+            self.nnMapping[func].to(self.device)
             latentAccuracies[func] = 0
             numLatentLabels[func] = 0
 
@@ -566,6 +576,8 @@ class NeurASP(object):
             for data, obs in dataset:
                 for key in list(data.keys()):
                     data[self.constReplacement(key)] = data.pop(key)
+                    if isinstance(obs, str):
+                        obs = [obs]
 
                 nnOutput = {}
                 for m in self.nnOutputs:
@@ -621,4 +633,10 @@ class NeurASP(object):
             else:
                 latentAccuracies[m] = 'unknown'
 
-        return downstreamAccuracy/len(dataset.dataset), latentAccuracies
+        if hasattr(dataset, 'dataset'):
+            # Dataset is a dataloader
+            dataset_len = len(dataset.dataset)
+        else:
+            dataset_len = len(dataset)
+
+        return downstreamAccuracy / dataset_len, latentAccuracies

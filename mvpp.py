@@ -227,13 +227,14 @@ class MVPP(object):
         """
         program = self.pi_prime + obs + '\n'
         # for each probabilistic rule with n atoms, add n weak constraints
-        for ruleIdx, atoms in enumerate(self.pc):
-            for atomIdx, atom in enumerate(atoms):
-                if self.parameters[ruleIdx][atomIdx] < 0.00674:
+        for ruleIdx, atom in enumerate(self.pc):
+            for valueIdx, value in enumerate(self.pc[atom]):
+                if self.parameters[ruleIdx][valueIdx] < 0.00674:
                     penalty = -1000 * -5
                 else:
-                    penalty = int(-1000 * math.log(self.parameters[ruleIdx][atomIdx]))
-                program += ':~ {}. [{}, {}, {}]\n'.format(atom, penalty, ruleIdx, atomIdx)
+                    penalty = int(-1000 * math.log(self.parameters[ruleIdx][valueIdx]))
+                atom_name = f"{atom.split('/')[0]}({atom.split(':')[1]},{value})"
+                program += ':~ {}. [{}, {}, {}]\n'.format(atom_name, penalty, ruleIdx, valueIdx)
 
         clingo_control = Control(['--warn=none', '-t', '8'])
         models = []
@@ -270,32 +271,15 @@ class MVPP(object):
         return prob
 
     def gradient(self, ruleIdx, atomIdx, obs):
-        # we will compute P(I)/p_i where I satisfies obs and c=v_i
-        p_obs_i = 0
-        # we will compute P(I)/p_j where I satisfies obs and c=v_j for i!=j
-        p_obs_j = 0
-        # we will compute P(I) where I satisfies obs
-        p_obs = 0
-
-        # 1st, we generate all I that satisfies obs
+        net_confs = torch.stack(self.parameters)
         models = self.find_k_SM_under_obs(obs, k=3)
-        # 2nd, we iterate over each model I, and check if I satisfies c=v_i
-        c_equal_vi = self.pc[ruleIdx][atomIdx]
-        p_i = self.parameters[ruleIdx][atomIdx]
-        for I in models:
-            p_I = self.prob_of_interpretation(I)
-            p_obs += p_I
-            if c_equal_vi in I:
-                p_obs_i += p_I/p_i
-            else:
-                for atomIdx2, p_j in enumerate(self.parameters[ruleIdx]):
-                    c_equal_vj = self.pc[ruleIdx][atomIdx2]
-                    if c_equal_vj in I:
-                        p_obs_j += p_I/p_j
-
-        # 3rd, we compute gradient
-        gradient = (p_obs_i-p_obs_j)/p_obs
-        return gradient
+        probs = self.prob_of_interpretation(models)
+        in_model = models[:,ruleIdx] == net_confs[ruleIdx][atomIdx]
+        p_obs_i = sum(probs / net_confs[ruleIdx][atomIdx] * in_model)
+        p_obs_j = sum(probs / net_confs[ruleIdx, models[:,ruleIdx]])
+        p_obs = sum(probs)
+        gradient = (p_obs_i - p_obs_j) / p_obs
+        return gradient.item()
 
     def mvppLearnRule(self, models, probs, num_out):
         net_confs = torch.stack(self.parameters)
@@ -469,29 +453,9 @@ class MVPP(object):
     # given models that satisfy obs
     def gradient_given_models(self, ruleIdx, models):
         arity = len(self.parameters[ruleIdx])
-
-        # we will compute N(O) and N(O,c=v_i)/p_i for each i
-        n_O = 0
-        n_i = [0]*arity
-
-        # 1st, we compute N(O)
-        n_O = len(models)
-
-        # 2nd, we compute N(O,c=v_i)/p_i for each i
-        for model in models:
-            for atomIdx, atom in enumerate(self.pc[ruleIdx]):
-                if atom in model:
-                    n_i[atomIdx] += 1
-        for atomIdx, p_i in enumerate(self.parameters[ruleIdx]):
-            n_i[atomIdx] = n_i[atomIdx]/p_i
-        
-        # 3rd, we compute the derivative of L'(O) w.r.t. p_i for each i
-        tmp = np.array(n_i) * (-1)
-        summation = np.sum(tmp)
-        gradients = np.array([summation]*arity)
-        for atomIdx, p_i in enumerate(self.parameters[ruleIdx]):
-            gradients[atomIdx] = gradients[atomIdx] + 2* n_i[atomIdx]
-        gradients = gradients / n_O
+        n_i = torch.bincount(models[:, ruleIdx], minlength=arity) / self.parameters[ruleIdx]
+        summation = torch.sum(n_i * -1)
+        gradients = (summation.repeat_interleave(arity) + 2 * n_i) / len(models)
         return gradients
 
 
