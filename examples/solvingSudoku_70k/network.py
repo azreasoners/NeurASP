@@ -47,4 +47,5 @@ class Sudoku_Net(nn.Module):
         x=x.permute(0,2,3,1)
         x=x.view(-1,81,9)
         x=nn.Softmax(2)(x)
+        x=x.squeeze()
         return x

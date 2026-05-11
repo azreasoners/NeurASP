@@ -42,6 +42,7 @@ NeurASPobj = NeurASP(dprogram, nnMapping, optimizers=None)
 ########
 
 numOfData = [15, 17, 19, 21, 23, 25]
+dataset = list(zip(dataListTest, obsListTest))
 
 for num in numOfData:
     print('\nLoad the model trained with {} data'.format(num))
@@ -51,5 +52,5 @@ for num in numOfData:
     acc, singleAcc = NeurASPobj.testNN('identify', test_loader)
     print('Test Acc Using Pure NN (whole board): {:0.2f}%'.format(acc))
     print('Test Acc Using Pure NN (single cell): {:0.2f}%'.format(singleAcc))
-    acc = NeurASPobj.testInferenceResults(dataListTest, obsListTest)
+    acc = NeurASPobj.testInferenceResults(dataset)
     print('Test Acc Using NeurASP (whole board): {:0.2f}%'.format(acc))

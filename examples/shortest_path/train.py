@@ -102,6 +102,9 @@ nnMapping = {'sp': m}
 optimizers = {'sp': torch.optim.Adam(m.parameters(), lr=0.001)}
 NeurASPobj = NeurASP(nnRule+aspProgram, nnMapping, optimizers)
 
+dataset = list(zip(dataList, obsList))
+datasetTest = list(zip(dataListTest, obsListTest))
+
 ########
 # Start training and testing
 ########
@@ -114,9 +117,9 @@ for idx, constraint in enumerate(combinations):
 for i in range(50):
     print('Continuously training for 10 epochs round {}...'.format(i+1))
     time1 = time.time()
-    NeurASPobj.learn(dataList=dataList, obsList=obsList, epoch=10, opt=True, smPickle='data/stableModels.pickle', bar=True)
+    NeurASPobj.learn(dataset, epoch=10, opt=True, bar=True, task='shortest_path')
     time2 = time.time()
-    NeurASPobj.testConstraint(dataList=dataListTest, obsList=obsListTest, mvppList=combinations)
+    NeurASPobj.testConstraint(datasetTest, mvppList=combinations)
     print("--- train time: %s seconds ---" % (time2 - time1))
     print("--- test time: %s seconds ---" % (time.time() - time2))
     print('--- total time from beginning: %s minutes ---' % int((time.time() - startTime)/60) )

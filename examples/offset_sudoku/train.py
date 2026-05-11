@@ -3,7 +3,7 @@ import torch.optim as optim
 
 from network import Sudoku_Net_Offset_bn
 from dataGen import train_loader,validation_loader,to_onehot
-from Trainer import Train_Test
+from trainer import Train_Test
 
 # =============================================================================
 # Instantiate Network
