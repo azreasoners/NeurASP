@@ -1,6 +1,5 @@
 # NeurASP
 This is the implementation of [NeurASP: Embracing Neural Networks into Answer Set Programming](https://www.ijcai.org/proceedings/2020/0243.pdf).  
-[Lab page](https://azreasoners.github.io/ARG-webpage/)
 # Introduction
 NeurASP is a simple extension of answer set programs by embracing neural networks. By treating the neural network output as the probability distribution over atomic facts in answer set programs, NeurASP provides a simple and effective way to integrate sub-symbolic and symbolic computation. This repository includes examples to show
 1. how NeurASP can make use of pretrained neural networks in symbolic computation and how it can improve the perception accuracy of a neural network by applying symbolic reasoning in answer set programming; and
@@ -25,7 +24,7 @@ conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch
 ```
 
 ## Examples
-We provide 3 inference and 5+4 learning examples as shown below. Each example is stored in a separate folder with a readme file.
+We provide 3 inference and 10 learning examples as shown below. Each example is stored in a separate folder with a readme file.
 ### Inference Examples
 * [Sudoku](https://github.com/azreasoners/NeurASP/tree/master/examples/sudoku)
 * [Offset Sudoku](https://github.com/azreasoners/NeurASP/tree/master/examples/offset_sudoku)
@@ -33,17 +32,15 @@ We provide 3 inference and 5+4 learning examples as shown below. Each example is
 
 ### Learning Examples
 * [MNIST Addition](https://github.com/azreasoners/NeurASP/tree/master/examples/mnistAdd)
-* [Shorstest Path](https://github.com/azreasoners/NeurASP/tree/master/examples/shortest_path)
+* [Shortest Path](https://github.com/azreasoners/NeurASP/tree/master/examples/shortest_path)
 * [Sudoku Solving](https://github.com/azreasoners/NeurASP/tree/master/examples/solvingSudoku_70k)
 * [Top-k](https://github.com/azreasoners/NeurASP/tree/master/examples/top_k)
 * [Most Reliable Path](https://github.com/azreasoners/NeurASP/tree/master/examples/most_reliable_path)
 * Examples from NeuroLog paper: [add2x2](https://github.com/azreasoners/NeurASP/tree/master/examples/add2x2), [apply2x2](https://github.com/azreasoners/NeurASP/tree/master/examples/apply2x2), [member3](https://github.com/azreasoners/NeurASP/tree/master/examples/member3), [member5](https://github.com/azreasoners/NeurASP/tree/master/examples/member5)
-
-## Related Work
-You may also be interested in our work [Injecting Logical Constraints into Neural Networks via Straight-Through-Estimators](https://azreasoners.github.io/ARG-webpage/pdfs/ste-ns-icml.pdf). Its codes are available [here](https://github.com/azreasoners/cl-ste).
+* [Card arithmetic](https://github.com/azreasoners/NeurASP/tree/master/examples/card_arithmetic)
 
 ## Citation
-Please cite our paper as:
+Please cite the original paper as:
 ```
 @inproceedings{ijcai2020p243,
   title     = {NeurASP: Embracing Neural Networks into Answer Set Programming},
@@ -60,4 +57,16 @@ Please cite our paper as:
   url       = {https://doi.org/10.24963/ijcai.2020/243},
 }
 
+```
+
+The follow-up paper that includes the speed improvements to NeurASP and the card arithmetic dataset can be cited as: 
+```
+@article{rader2026accelerating_neurasp,
+    title={Accelerating NeurASP with Vectorization and Caching},
+    DOI={10.1017/S1471068426100611},
+    journal={Theory and Practice of Logic Programming},
+    author={Rader, Alexander Philipp and Russo, Alessandra},
+    year={2026},
+    pages={1–16}
+}
 ```
