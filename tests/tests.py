@@ -12,11 +12,11 @@ class TestNeurASP(unittest.TestCase):
     def test_prob_of_interpretation(self):
         """Test that probabilities are calculated correctly"""
 
-        # 6 models, 9 images
+        # 6 models, 9 concepts
         models = [[3, 0, 3, 1, 3, 3, 3, 0, 3], [0, 3, 1, 1, 2, 2, 0, 1, 3], [0, 2, 1, 1, 2, 1, 2, 0, 3],
                   [0, 3, 1, 0, 2, 1, 1, 0, 1], [0, 3, 3, 0, 0, 2, 1, 1, 2], [1, 3, 3, 0, 0, 2, 2, 1, 0]]
 
-        # 4 outputs per image
+        # 4 choices per concept
         pc = [
             ['test(i1,0)', 'test(i1,1)', 'test(i1,2)', 'test(i1,3)'],
             ['test(i2,0)', 'test(i2,1)', 'test(i2,2)', 'test(i2,3)'],
@@ -29,12 +29,11 @@ class TestNeurASP(unittest.TestCase):
             ['test(i9,0)', 'test(i9,1)', 'test(i9,2)', 'test(i9,3)']
         ]
 
-        parameters = [[0.2, 0.1, 0.8, 0.7], [0.9, 0.9, 0.4, 0.3], [0.6, 0.3, 0.1, 0.1], [0.7, 0.1, 0.2, 0.4],
-                      [0.1, 0.7, 0.5, 0.3], [0, 0.5, 0.9, 0.1], [0.5, 0.7, 0, 0.7], [0.6, 0.3, 0.1, 0.7],
-                      [0.9, 0, 0.2, 0.5]]
+        parameters = torch.tensor([[0.2, 0.1, 0.8, 0.7], [0.9, 0.9, 0.4, 0.3], [0.6, 0.3, 0.1, 0.1],
+                                   [0.7, 0.1, 0.2, 0.4], [0.1, 0.7, 0.5, 0.3], [0, 0.5, 0.9, 0.1], [0.5, 0.7, 0, 0.7],
+                                   [0.6, 0.3, 0.1, 0.7], [0.9, 0, 0.2, 0.5]])
 
-        mock_return = (pc, [torch.Tensor(parameter) for parameter in parameters], False, "mock_asp", "mock_pi",
-                       "mock_remain_probs")
+        mock_return = (pc, parameters, False, "mock_asp", "mock_pi", "mock_remain_probs")
 
         probs = [0.00003969, 0.00006075, 0, 0, 0.000015876, 0]
 
@@ -48,13 +47,13 @@ class TestNeurASP(unittest.TestCase):
     def test_mvppLearnRule(self):
         """Test that gradients are calculated correctly"""
 
-        # 8 models, 9 images
+        # 8 models, 9 concepts
         models = torch.IntTensor(
                  [[1, 0, 0, 5, 7, 7, 5, 3, 2], [6, 2, 0, 1, 0, 6, 4, 5, 8], [5, 1, 8, 6, 1, 2, 4, 6, 4],
                   [8, 8, 3, 0, 7, 0, 3, 1, 3], [2, 4, 7, 1, 3, 3, 5, 1, 2], [3, 3, 5, 3, 8, 8, 3, 0, 2],
                   [3, 4, 8, 5, 8, 5, 2, 0, 4], [7, 4, 3, 1, 0, 2, 5, 7, 6]])
 
-        # 9 outputs per image
+        # 9 choices per concept
         pc = [
             ['test(i1,0)', 'test(i1,1)', 'test(i1,2)', 'test(i1,3)', 'test(i1,4)', 'test(i1,5)', 'test(i1,6)',
              'test(i1,7)', 'test(i1,8)'],
@@ -78,14 +77,13 @@ class TestNeurASP(unittest.TestCase):
 
         probs = np.array([0, 0.1, 0, 1, 0.1, 0.6, 0, 0.2])
 
-        parameters = [[0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1], [0.1, 0.2, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1, 0.1],
-                      [0.1, 0.1, 0.2, 0.1, 0.1, 0.2, 0.1, 0.2, 0.1], [0.1, 0.2, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.3],
-                      [0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1], [0.1, 0.1, 0.1, 0.2, 0.1, 0.2, 0.2, 0.1, 0.1],
-                      [0.1, 0.1, 0.2, 0.1, 0.2, 0.2, 0.1, 0, 0.1], [0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.2, 0.3],
-                      [0.2, 0.1, 0.1, 0.1, 0.1, 0.2, 0.1, 0.1, 0.2]]
+        parameters = torch.tensor([[0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1],
+            [0.1, 0.2, 0.1, 0.1, 0.1, 0.2, 0.2, 0.1, 0.1], [0.1, 0.1, 0.2, 0.1, 0.1, 0.2, 0.1, 0.2, 0.1],
+            [0.1, 0.2, 0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.3], [0.2, 0.1, 0.2, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1],
+            [0.1, 0.1, 0.1, 0.2, 0.1, 0.2, 0.2, 0.1, 0.1], [0.1, 0.1, 0.2, 0.1, 0.2, 0.2, 0.1, 0, 0.1],
+            [0.1, 0.1, 0.2, 0.1, 0.1, 0.1, 0.1, 0.2, 0.3], [0.2, 0.1, 0.1, 0.1, 0.1, 0.2, 0.1, 0.1, 0.2]])
 
-        mock_return = (pc, [torch.Tensor(parameter) for parameter in parameters], False, "mock_asp", "mock_pi",
-                       "mock_remain_probs")
+        mock_return = (pc, parameters, False, "mock_asp", "mock_pi", "mock_remain_probs")
 
         grads = [[-9, -9, -8.5, -3, -9, -9, -8.5, -8, 1], [-10, -10, -9, -4, -7, -10, -10, -10, 0],
                  [-7.25, -8.25, -8.25, 3.75, -8.25, -5.25, -8.25, -7.75, -8.25], [1, -7, -9, -3, -9, -9, -9, -9, -9],
@@ -250,11 +248,10 @@ class TestNeurASP(unittest.TestCase):
         pc = {'test/3:1,i1': ['1', '2', '3', '4', '5'], 'test/3:1,i2': ['1', '2', '3', '4', '5'],
               'test/3:1,i3': ['1', '2', '3', '4', '5'], 'test/3:1,i4': ['1', '2', '3', '4', '5'],
               'test/3:1,i5': ['1', '2', '3', '4', '5']}
-        parameters = [[0.2, 0.4, 0.1, 0.1, 0.2], [0.1, 0.2, 0.1, 0.4, 0.2], [0.1, 0.2, 0.1, 0.4, 0.2],
-                      [0.2, 0.0, 0.0, 0.4, 0.4], [0.5, 0.3, 0.0, 0.2, 0.0]]
+        parameters = torch.tensor([[0.2, 0.4, 0.1, 0.1, 0.2], [0.1, 0.2, 0.1, 0.4, 0.2], [0.1, 0.2, 0.1, 0.4, 0.2],
+                                   [0.2, 0.0, 0.0, 0.4, 0.4], [0.5, 0.3, 0.0, 0.2, 0.0]])
 
-        mock_return = (pc, [torch.Tensor(parameter) for parameter in parameters], False, "mock_asp", pi_prime,
-                       "mock_remain_probs")
+        mock_return = (pc, parameters, False, "mock_asp", pi_prime, "mock_remain_probs")
 
         with (mock.patch.object(MVPP, 'parse', return_value=mock_return),
               mock.patch.object(MVPP, 'normalize_probs')):
@@ -273,18 +270,35 @@ class TestNeurASP(unittest.TestCase):
                'test(1,i3,7)'],
               ['test(1,i4,1)', 'test(1,i4,2)', 'test(1,i4,3)', 'test(1,i4,4)', 'test(1,i4,5)', 'test(1,i4,6)',
                'test(1,i5,7)']]
-        parameters = [[0.3, 0.0, 0.2, 0.1, 0.1, 0.1, 0.2], [0.2, 0.2, 0.1, 0.1, 0.1, 0.1, 0.2],
-                      [0.0, 0.2, 0.1, 0.1, 0.2, 0.2, 0.2], [0.1, 0.1, 0.3, 0.2, 0.1, 0.2, 0.0]]
+        parameters = torch.tensor([[0.3, 0.0, 0.2, 0.1, 0.1, 0.1, 0.2], [0.2, 0.2, 0.1, 0.1, 0.1, 0.1, 0.2],
+                                   [0.0, 0.2, 0.1, 0.1, 0.2, 0.2, 0.2], [0.1, 0.1, 0.3, 0.2, 0.1, 0.2, 0.0]])
 
         models = torch.IntTensor([[6, 5, 0, 4], [1, 3, 4, 5], [6, 1, 1, 3], [4, 6, 0, 3], [5, 6, 4, 5],
                                   [3, 3, 5, 6], [2, 1, 2, 4]])
-        mock_return = (pc, [torch.Tensor(parameter) for parameter in parameters], False, "mock_asp",
-                       "mock_pi_prime", "mock_remain_probs")
-        # Test NeurASP
+        mock_return = (pc, parameters, False, "mock_asp", "mock_pi_prime", "mock_remain_probs")
+
         with (mock.patch.object(MVPP, 'parse', return_value=mock_return),
               mock.patch.object(MVPP, 'normalize_probs')):
             mvpp = MVPP('')
             neurasp_gradients = mvpp.gradient_given_models(1,  models)
         gradients = [-7.142857142857143, -4.285714285714286, -7.142857142857143, -1.4285714285714286,
                      -7.142857142857143, -4.285714285714286, -4.285714285714286]
-        np.testing.assert_almost_equal(gradients, neurasp_gradients)
+        np.testing.assert_almost_equal(neurasp_gradients, gradients)
+
+    def test_normalize_probs(self):
+        """Test that probabilities are normalized correctly"""
+        # 1 concept, 5 choices
+        learnable = torch.tensor([[True, False, False, False, True]])
+        parameters = torch.tensor([[0.7, 0.2, 0.3, 0.1, 0.3]])
+        # Epsilon forces values to be between 0.4 and 0.6
+        eps = 0.4
+        # Non-learnable choices make up 60% of the probability mass, so 40% are remaining
+        remain_probs = torch.tensor([0.4])
+        mock_return = ("mock_pc", parameters, learnable, "mock_asp", "mock_pi_prime", remain_probs)
+
+        with (mock.patch.object(MVPP, 'parse', return_value=mock_return)):
+            mvpp = MVPP('', eps=eps)
+            # Instantiating MVVP calls normalize_probs, so we get the changed parameters
+            neurasp_probs = mvpp.parameters
+        normalized_probs = [[0.24, 0.2, 0.3, 0.1, 0.16]]
+        np.testing.assert_almost_equal(neurasp_probs,normalized_probs)

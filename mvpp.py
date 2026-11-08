@@ -78,8 +78,8 @@ class MVPP(object):
                     else:
                         pc[concept_id].append(concept_value)
 
-                parameters.append(list_of_probs)
-                learnable.append(list_of_bools)
+                parameters.append(torch.tensor(list_of_probs))
+                learnable.append(torch.tensor(list_of_bools))
                 pi_prime += "1{" + "; ".join(list_of_atoms) + "}1.\n"
             else:
                 asp += (line.strip() + "\n")
@@ -92,33 +92,32 @@ class MVPP(object):
                 if b == False:
                     remain_prob -= parameters[ruleIdx][atomIdx]
             remain_probs.append(remain_prob)
+
+        if parameters:
+            parameters = torch.stack(parameters)
+        if learnable:
+            learnable = torch.stack(learnable)
+        if remain_probs:
+            remain_probs = torch.tensor(remain_probs)
+
         return pc, parameters, learnable, asp, pi_prime, remain_probs
 
     def normalize_probs(self):
-        for ruleIdx, list_of_bools in enumerate(self.learnable):
-            summation = 0
-            # 1st, we turn each probability into [0+eps,1-eps]
-            for atomIdx, b in enumerate(list_of_bools):
-                if b == True:
-                    if self.parameters[ruleIdx][atomIdx] >= 1:
-                        self.parameters[ruleIdx][atomIdx] = 1 - self.eps
-                    elif self.parameters[ruleIdx][atomIdx] <= 0:
-                        self.parameters[ruleIdx][atomIdx] = self.eps
+        """Normalize parameters so that learnable and non-learnable probabilities add up to 1"""
+        # Only change parameters if they are non-empty
+        if len(self.parameters) != 0:
+            # Clamp each learnable probability so it cannot be 0 or 1
+            self.parameters[self.learnable] = self.parameters[self.learnable].clamp(0+self.eps, 1-self.eps)
+            # Normalize all learnable parameters to sum up to 1 - non-learnable probabilities
+            summation = (self.parameters * self.learnable).sum(dim=1).unsqueeze(1).expand_as(self.parameters)
+            remain_probs = self.remain_probs.unsqueeze(1).expand_as(self.parameters)
+            self.parameters[self.learnable] = (self.parameters[self.learnable] / summation[self.learnable]
+                                               * remain_probs[self.learnable])
 
-            # 2nd, we normalize the probabilities
-            for atomIdx, b in enumerate(list_of_bools):
-                if b == True:
-                    summation += self.parameters[ruleIdx][atomIdx]
-            for atomIdx, b in enumerate(list_of_bools):
-                if b == True:
-                    self.parameters[ruleIdx][atomIdx] = self.parameters[ruleIdx][atomIdx] / summation * \
-                                                        self.remain_probs[ruleIdx]
-        return True
 
     def prob_of_interpretation(self, models):
-        net_confs = torch.stack(self.parameters)
-        concept_indices = torch.arange(len(net_confs)).repeat(len(models), 1)
-        probs = net_confs[concept_indices, models].prod(1)
+        concept_indices = torch.arange(len(self.parameters)).repeat(len(models), 1)
+        probs = self.parameters[concept_indices, models].prod(1)
         return probs
 
     # We assume obs is a string containing a valid Clingo program,
@@ -271,24 +270,22 @@ class MVPP(object):
         return prob
 
     def gradient(self, ruleIdx, atomIdx, obs):
-        net_confs = torch.stack(self.parameters)
         models = self.find_k_SM_under_obs(obs, k=3)
         probs = self.prob_of_interpretation(models)
-        in_model = models[:,ruleIdx] == net_confs[ruleIdx][atomIdx]
-        p_obs_i = sum(probs / net_confs[ruleIdx][atomIdx] * in_model)
-        p_obs_j = sum(probs / net_confs[ruleIdx, models[:,ruleIdx]])
+        in_model = models[:,ruleIdx] == self.parameters[ruleIdx][atomIdx]
+        p_obs_i = sum(probs / self.parameters[ruleIdx][atomIdx] * in_model)
+        p_obs_j = sum(probs / self.parameters[ruleIdx, models[:,ruleIdx]])
         p_obs = sum(probs)
         gradient = (p_obs_i - p_obs_j) / p_obs
         return gradient.item()
 
     def mvppLearnRule(self, models, probs, num_out):
-        net_confs = torch.stack(self.parameters)
         denominator = sum(probs)
         if denominator == 0:
             return torch.zeros(len(self.learnable), num_out)
 
-        concept_indices = torch.arange(len(net_confs)).repeat(len(models), 1)
-        concept_probs = net_confs[concept_indices, models]
+        concept_indices = torch.arange(len(self.parameters)).repeat(len(models), 1)
+        concept_probs = self.parameters[concept_indices, models]
 
         weighted_probs = probs.view(len(probs),1) / concept_probs
         nums_out = torch.arange(num_out)

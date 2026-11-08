@@ -5,6 +5,7 @@ import torch
 import os
 import sys
 import random
+import cProfile
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, "../../"))
@@ -17,7 +18,7 @@ from mvpp import MVPP
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--variant', type=str, default='sum_2')
-parser.add_argument('--image_dir', type=str, default='data')
+parser.add_argument('--image_dir', type=str, default='images')
 parser.add_argument('--batch_size', type=int, default=32)
 parser.add_argument('--learning_rate', '--lr', type=float, default=0.0001)
 parser.add_argument('--weight_decay', type=float, default=0)
@@ -58,8 +59,12 @@ neural_mapping = {'card': network}
 optimizers = {'card': torch.optim.Adam(network.parameters(), lr=args.learning_rate, weight_decay=args.weight_decay)}
 neurasp_obj = NeurASP(program, neural_mapping, optimizers, gpu=not args.cpu)
 
-neurasp_obj.learn(dataloader, args.epochs, lr=args.learning_rate, accStep = args.checkpoint_freq, seed = seed,
-                  valDataset = val_dataloader, task = f'card_{args.variant}')
+with cProfile.Profile() as pr:
+    neurasp_obj.learn(dataloader, args.epochs, lr=args.learning_rate, accStep = args.checkpoint_freq, seed = seed,
+                      valDataset = val_dataloader, task = f'card_{args.variant}', bar=True)
+stats = pstats.Stats(pr)
+stats.sort_stats(pstats.SortKey.TIME)
+stats.print_stats(20)
 
 dmvpp = MVPP(neurasp_obj.mvpp['program'])
 down_acc, latent_accs = neurasp_obj.calculate_accuracies(test_dataloader, dmvpp)
